@@ -1,0 +1,2 @@
+- Put names of expected output fields in header (name, time, eventPacket, data, etc.)
+- Support for customized decoder

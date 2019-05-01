@@ -1,0 +1,41 @@
+jobs:
+  - job: Linux
+    pool:
+      vmImage: 'Ubuntu 16.04'
+    steps:
+    - bash: |
+        mkdir deps
+        cd deps
+        mkdir -p src
+        mkdir -p install
+        cd src
+        git clone https://github.com/efficios/babeltrace
+        cd babeltrace
+        sudo apt-get install gcc libc6-dev libglib2.0-dev uuid-dev libpopt-dev automake autoconf libtool flex bison -y
+        ./bootstrap
+        ./configure --disable-debug-info --disable-man-pages
+        make
+        sudo make install
+      displayName: 'Telemetry Service: Install babeltrace'
+
+    - task: CMake@1
+      displayName: 'CMake Configure+Generate'
+      inputs:
+        cmakeArgs: '-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..'
+
+    - task: CMake@1
+      displayName: 'CMake Build'
+      inputs:
+        cmakeArgs: '--build .'
+
+    - bash: |
+        cd build/test
+        mkdir testResults
+        ./lttng-consumeTest -o testResults/TEST-LttngConsumeTest.xml -r junit
+      displayName: 'Run test binary'
+      continueOnError: true
+
+    - task: PublishTestResults@2
+      displayName: 'Publish test results'
+      inputs:
+        testResultsFiles: '**/TEST-*.xml'
