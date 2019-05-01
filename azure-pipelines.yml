@@ -22,6 +22,10 @@ jobs:
         sudo make install
       displayName: 'Install babeltrace'
 
+    - bash: |
+        sudo apt-get install lttng-tools -y
+      displayName: 'Install lttng-tools and start session for runtime test to succeed'
+
     - task: CMake@1
       displayName: 'CMake Configure+Generate'
       inputs:
