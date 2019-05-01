@@ -9,9 +9,13 @@ if (NOT TARGET nonstd::string_view-lite)
     add_subdirectory(external/string-view-lite)
 endif ()
 
-add_subdirectory(external/JsonBuilder)
+if (NOT TARGET jsonbuilder)
+    add_subdirectory(external/JsonBuilder)
+endif()
 
-add_subdirectory(external/TraceLogging)
+if (NOT TARGET tracelogging)
+    add_subdirectory(external/TraceLogging)
+endif()
 
 add_subdirectory(src)
 
