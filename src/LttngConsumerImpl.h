@@ -20,6 +20,7 @@ class JsonBuilder;
 }
 
 namespace LttngConsume {
+
 class LttngConsumerImpl
 {
   public:

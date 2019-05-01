@@ -9,6 +9,7 @@
 #include <nonstd/string_view.hpp>
 
 namespace LttngConsume {
+
 class LttngConsumerImpl;
 
 class LttngConsumer
@@ -28,4 +29,4 @@ class LttngConsumer
     std::unique_ptr<LttngConsumerImpl> _impl;
 };
 
-}  // namespace LttngConsume
+}
