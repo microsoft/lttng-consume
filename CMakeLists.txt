@@ -13,7 +13,7 @@ if (NOT TARGET jsonbuilder)
     add_subdirectory(external/JsonBuilder)
 endif()
 
-if (NOT TARGET TraceLogging)
+if (NOT TARGET tracelogging)
     add_subdirectory(external/TraceLogging)
 endif()
 
