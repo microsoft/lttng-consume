@@ -1,4 +1,6 @@
 
+[![Build Status](https://mscodehub.visualstudio.com/Azile/_apis/build/status/github-lttng-consume-CI?branchName=master)](https://mscodehub.visualstudio.com/Azile/_build/latest?definitionId=925&branchName=master)
+
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
