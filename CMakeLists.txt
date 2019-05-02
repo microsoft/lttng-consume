@@ -17,6 +17,8 @@ if (NOT TARGET tracelogging)
     add_subdirectory(external/TraceLogging)
 endif()
 
+add_compile_options(-Wall -Wextra -Werror)
+
 add_subdirectory(src)
 
 # Only include testing stuff if we are the top level
