@@ -8,9 +8,11 @@
 struct bt_notification;
 
 namespace LttngConsume {
+
 class LttngJsonReader
 {
   public:
     jsonbuilder::JsonBuilder DecodeEvent(bt_notification* event);
 };
+
 }

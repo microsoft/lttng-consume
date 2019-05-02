@@ -18,6 +18,7 @@
 #include "JsonBuilderSink.h"
 
 namespace LttngConsume {
+
 LttngConsumerImpl::LttngConsumerImpl(
     nonstd::string_view listeningUrl,
     std::chrono::milliseconds pollInterval)
@@ -166,4 +167,5 @@ void LttngConsumerImpl::PortAddedListener(bt_port* port)
         FAIL_FAST_IF(true);
     }
 }
+
 }

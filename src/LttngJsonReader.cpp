@@ -18,6 +18,7 @@
 using namespace jsonbuilder;
 
 namespace LttngConsume {
+
 void AddField(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
@@ -463,4 +464,5 @@ JsonBuilder LttngJsonReader::DecodeEvent(bt_notification* eventNotif)
 
     return builder;
 }
+
 }

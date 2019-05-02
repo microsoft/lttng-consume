@@ -5,6 +5,8 @@
 
 #include <babeltrace/ref.h>
 
+namespace LttngConsume {
+
 template<class BTType>
 class BabelPtr
 {
@@ -82,3 +84,5 @@ class BabelPtr
   private:
     BTType* _ptr;
 };
+
+}

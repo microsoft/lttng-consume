@@ -6,6 +6,7 @@
 #include "LttngConsumerImpl.h"
 
 namespace LttngConsume {
+
 LttngConsumer::LttngConsumer(
     nonstd::string_view listeningUrl,
     std::chrono::milliseconds pollInterval)
@@ -25,4 +26,5 @@ void LttngConsumer::StopConsuming()
 {
     _impl->StopConsuming();
 }
+
 }

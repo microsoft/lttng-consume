@@ -14,6 +14,7 @@ class JsonBuilder;
 }
 
 namespace LttngConsume {
+
 BabelPtr<bt_component_class> GetJsonBuilderSinkComponentClass();
 
 struct JsonBuilderSinkInitParams
