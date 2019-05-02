@@ -1,4 +1,4 @@
-# Contributing to JsonBuilder
+# Contributing to lttng-consume
 
 ## Reporting Issues
 
