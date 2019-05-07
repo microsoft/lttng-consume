@@ -71,6 +71,9 @@ void LttngConsumerImpl::CreateGraph(
 
     _graph = bt_graph_create();
 
+    const bt_plugin* ctfPlugin = bt_plugin_find("ctf");
+    auto deletePlugin = bt_plugin_put_ref(ctfPlugin);
+
     // Create source component
     BabelPtr<bt_component_class> lttngLiveClass = bt_plugin_find_component_class(
         "ctf",

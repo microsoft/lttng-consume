@@ -3,19 +3,24 @@
 
 #pragma once
 
-#include <babeltrace/ref.h>
+#include <babeltrace/babeltrace.h>
 
 namespace LttngConsume {
 
-template<class BTType>
+template<class Details>
 class BabelPtr
 {
+    using BTType = typename Details::BTType;
+
   public:
     BabelPtr() : _ptr(nullptr) {}
 
-    ~BabelPtr() { bt_put(_ptr); }
+    ~BabelPtr() { Details::PutFunc(_ptr); }
 
-    BabelPtr(const BabelPtr& other) : _ptr(bt_get(other._ptr)) {}
+    BabelPtr(const BabelPtr& other) : _ptr(other._ptr)
+    {
+        Details::GetFunc(other._ptr);
+    }
 
     BabelPtr(BabelPtr&& other)
     {
@@ -23,12 +28,12 @@ class BabelPtr
         other._ptr = nullptr;
     }
 
-    BabelPtr(BTType* ptr) : _ptr(ptr) {}
+    BabelPtr(const BTType* ptr) : _ptr(ptr) {}
 
     BabelPtr& operator=(const BabelPtr& other)
     {
-        BTType* ptr = bt_get(other._ptr);
-        DiscardCurrentAndAttach(ptr);
+        Details::GetFunc(other._ptr);
+        DiscardCurrentAndAttach(other._ptr);
         return *this;
     }
 
@@ -48,17 +53,17 @@ class BabelPtr
     void IncrementingOwn(BTType* ptr)
     {
         DiscardCurrentAndAttach(ptr);
-        bt_get(ptr);
+        Details::GetFunc(ptr);
     }
 
-    BTType* Detach()
+    const BTType* Detach()
     {
         BTType* ptr = _ptr;
         _ptr = nullptr;
         return ptr;
     }
 
-    BTType* Get() { return _ptr; }
+    const BTType* Get() { return _ptr; }
 
     void Reset() { DiscardCurrentAndAttach(nullptr); }
 
@@ -75,9 +80,9 @@ class BabelPtr
     bool operator==(const BabelPtr& other) { return _ptr == other._ptr; }
 
   private:
-    void DiscardCurrentAndAttach(BTType* ptr)
+    void DiscardCurrentAndAttach(const BTType* ptr)
     {
-        bt_put(_ptr);
+        Details::PutFunc(_ptr);
         _ptr = ptr;
     }
 
@@ -85,4 +90,16 @@ class BabelPtr
     BTType* _ptr;
 };
 
+#define MAKE_PTR_TYPE(BabelPtrPrefix, LibBabeltraceType)               \
+    namespace details {                                                \
+    struct BabelPtrPrefix##Details                                     \
+    {                                                                  \
+        using BTType = LibBabeltraceType;                              \
+        static void GetFunc(const BTType* p) { bt_plugin_get_ref(p); } \
+        static void PutFunc(const BTType* p) { bt_plugin_put_ref(p); } \
+    };                                                                 \
+    }                                                                  \
+    using BabelPtrPrefix##Ptr = BabelPtr<details::BabelPtrPrefix##Details>;
+
+MAKE_PTR_TYPE(BtPlugin, bt_plugin);
 }

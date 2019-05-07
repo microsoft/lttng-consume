@@ -7,7 +7,7 @@
 #include <memory>
 
 // clang-format off
-#include <babeltrace/ctf-ir/field-types.h>
+// #include <babeltrace/ctf-ir/field-types.h>
 #include <babeltrace/babeltrace.h>
 // clang-format on
 
