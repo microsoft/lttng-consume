@@ -69,9 +69,9 @@ bt_component_status JsonBuilderSink::Run()
 
 void JsonBuilderSink::PortConnected(bt_private_port* self_port, bt_port*)
 {
-    constexpr std::array<bt_notification_type, 2> c_types = {{
-        BT_NOTIFICATION_TYPE_EVENT, BT_NOTIFICATION_TYPE_SENTINEL
-    }};
+    constexpr std::array<bt_notification_type, 2> c_types = {
+        { BT_NOTIFICATION_TYPE_EVENT, BT_NOTIFICATION_TYPE_SENTINEL }
+    };
 
     BabelPtr<bt_private_connection> connection =
         bt_private_port_get_private_connection(self_port);
@@ -140,9 +140,9 @@ void JsonBuilderSink_FinalizeStatic(bt_private_component* private_component)
     delete jbSink;
 }
 
-BabelPtr<bt_component_class> GetJsonBuilderSinkComponentClass()
+BtComponentClassConstPtr GetJsonBuilderSinkComponentClass()
 {
-    BabelPtr<bt_component_class> jsonBuilderSinkClass =
+    BtComponentClassPtr jsonBuilderSinkClass =
         bt_component_class_sink_create("jsonbuilder", JsonBuilderSink_RunStatic);
     bt_component_class_set_init_method(
         jsonBuilderSinkClass.Get(), JsonBuilderSink_InitStatic);

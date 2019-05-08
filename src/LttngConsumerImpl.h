@@ -33,11 +33,16 @@ class LttngConsumerImpl
     void StopConsuming();
 
   private:
-    static void PortAddedListenerStatic(bt_port* port, void* data);
+    static void SourceComponentOutputPortAddedListenerStatic(
+        const bt_component_source* component,
+        const bt_port_output* port,
+        void* data);
 
     void CreateGraph(std::function<void(jsonbuilder::JsonBuilder&&)>& callback);
 
-    void PortAddedListener(bt_port* port);
+    void SourceComponentOutputPortAddedListener(
+        const bt_component_source* component,
+        const bt_port_output* port);
 
   private:
     std::string _listeningUrl;
@@ -45,9 +50,9 @@ class LttngConsumerImpl
     std::atomic<bool> _stopConsuming;
 
     BtGraphPtr _graph;
-    BtComponentPtr _lttngLiveSource;
-    BtComponentPtr _muxerFilter;
-    BtComponentPtr _jsonBuilderSink;
+    BtComponentSourceConstPtr _lttngLiveSource;
+    BtComponentFilterConstPtr _muxerFilter;
+    BtComponentSinkConstPtr _jsonBuilderSink;
 };
 
 }

@@ -28,7 +28,7 @@ class BabelPtr
         other._ptr = nullptr;
     }
 
-    BabelPtr(const BTType* ptr) : _ptr(ptr) {}
+    BabelPtr(BTType* ptr) : _ptr(ptr) {}
 
     BabelPtr& operator=(const BabelPtr& other)
     {
@@ -56,14 +56,14 @@ class BabelPtr
         Details::GetFunc(ptr);
     }
 
-    const BTType* Detach()
+    BTType* Detach()
     {
         BTType* ptr = _ptr;
         _ptr = nullptr;
         return ptr;
     }
 
-    const BTType* Get() { return _ptr; }
+    BTType* Get() { return _ptr; }
 
     void Reset() { DiscardCurrentAndAttach(nullptr); }
 
@@ -80,7 +80,7 @@ class BabelPtr
     bool operator==(const BabelPtr& other) { return _ptr == other._ptr; }
 
   private:
-    void DiscardCurrentAndAttach(const BTType* ptr)
+    void DiscardCurrentAndAttach(BTType* ptr)
     {
         Details::PutFunc(_ptr);
         _ptr = ptr;
@@ -90,27 +90,38 @@ class BabelPtr
     BTType* _ptr;
 };
 
-#define MAKE_PTR_TYPE(BabelPtrPrefix, LibBabeltraceType) \
-    namespace details {                                  \
-    struct BabelPtrPrefix##Details                       \
-    {                                                    \
-        using BTType = LibBabeltraceType;                \
-        static void GetFunc(const BTType* p)             \
-        {                                                \
-            LibBabeltraceType##_get_ref(p);              \
-        }                                                \
-        static void PutFunc(const BTType* p)             \
-        {                                                \
-            LibBabeltraceType##_put_ref(p);              \
-        }                                                \
-    };                                                   \
-    }                                                    \
-    using BabelPtrPrefix##Ptr = BabelPtr<details::BabelPtrPrefix##Details>;
+#define MAKE_PTR_TYPE(BabelPtrPrefix, LibBabeltraceType)                    \
+    namespace details {                                                     \
+    struct BabelPtrPrefix##Details                                          \
+    {                                                                       \
+        using BTType = LibBabeltraceType;                                   \
+        static void GetFunc(BTType* p) { LibBabeltraceType##_get_ref(p); }  \
+        static void PutFunc(BTType* p) { LibBabeltraceType##_put_ref(p); }  \
+    };                                                                      \
+    struct BabelPtrPrefix##ConstDetails                                     \
+    {                                                                       \
+        using BTType = const LibBabeltraceType;                             \
+        static void GetFunc(const BTType* p)                                \
+        {                                                                   \
+            LibBabeltraceType##_get_ref(p);                                 \
+        }                                                                   \
+        static void PutFunc(const BTType* p)                                \
+        {                                                                   \
+            LibBabeltraceType##_put_ref(p);                                 \
+        }                                                                   \
+    };                                                                      \
+    }                                                                       \
+    using BabelPtrPrefix##Ptr = BabelPtr<details::BabelPtrPrefix##Details>; \
+    using BabelPtrPrefix##ConstPtr =                                        \
+        BabelPtr<details::BabelPtrPrefix##ConstDetails>;
 
 MAKE_PTR_TYPE(BtPlugin, bt_plugin);
-MAKE_PTR_TYPE(BtComponentClass, bt_component_class);
+MAKE_PTR_TYPE(BtComponentClassSink, bt_component_class_sink);
 MAKE_PTR_TYPE(BtValue, bt_value);
 MAKE_PTR_TYPE(BtPort, bt_port);
 MAKE_PTR_TYPE(BtGraph, bt_graph);
 MAKE_PTR_TYPE(BtComponent, bt_component);
+MAKE_PTR_TYPE(BtComponentSource, bt_component_source);
+MAKE_PTR_TYPE(BtComponentFilter, bt_component_filter);
+MAKE_PTR_TYPE(BtComponentSink, bt_component_sink);
 }
