@@ -25,19 +25,21 @@ class JsonBuilderSink
         : _outputFunc(outputFunc)
     {}
 
-    bt_component_status Run();
+    bt_self_component_status Run();
 
-    void PortConnected(bt_private_port* self_port, bt_port* other_port);
+    void PortConnected(
+        bt_self_component_port_input* self_port,
+        const bt_port_output* other_port);
 
   private:
-    bt_component_status PersistEvent(bt_notification* eventNotif);
+    bt_self_component_status PersistEvent(bt_notification* eventNotif);
 
   private:
     BabelPtr<bt_notification_iterator> _notifIter;
     std::function<void(JsonBuilder&&)>& _outputFunc;
 };
 
-bt_component_status JsonBuilderSink::Run()
+bt_self_component_status JsonBuilderSink::Run()
 {
     bt_notification_iterator_status status =
         bt_notification_iterator_next(_notifIter.Get());
@@ -45,13 +47,13 @@ bt_component_status JsonBuilderSink::Run()
     {
     case BT_NOTIFICATION_ITERATOR_STATUS_END:
         _notifIter.Reset();
-        return BT_COMPONENT_STATUS_END;
+        return BT_SELF_COMPONENT_STATUS_END;
     case BT_NOTIFICATION_ITERATOR_STATUS_AGAIN:
-        return BT_COMPONENT_STATUS_AGAIN;
+        return BT_SELF_COMPONENT_STATUS_AGAIN;
     case BT_NOTIFICATION_ITERATOR_STATUS_OK:
         break;
     default:
-        return BT_COMPONENT_STATUS_ERROR;
+        return BT_SELF_COMPONENT_STATUS_ERROR;
     }
 
     BabelPtr<bt_notification> notification =
@@ -63,13 +65,15 @@ bt_component_status JsonBuilderSink::Run()
         return PersistEvent(notification.Get());
     }
     default:
-        return BT_COMPONENT_STATUS_ERROR;
+        return BT_SELF_COMPONENT_STATUS_ERROR;
     }
 }
 
-void JsonBuilderSink::PortConnected(bt_private_port* self_port, bt_port*)
+void JsonBuilderSink::PortConnected(
+    bt_self_component_port_input* self_port,
+    const bt_port_output* other_port)
 {
-    constexpr std::array<bt_notification_type, 2> c_types = {
+    constexpr std::array<bt_notification, 2> c_types = {
         { BT_NOTIFICATION_TYPE_EVENT, BT_NOTIFICATION_TYPE_SENTINEL }
     };
 
@@ -81,31 +85,28 @@ void JsonBuilderSink::PortConnected(bt_private_port* self_port, bt_port*)
         BT_CONNECTION_STATUS_OK);
 }
 
-bt_component_status JsonBuilderSink::PersistEvent(bt_notification* eventNotif)
+bt_self_component_status
+JsonBuilderSink::PersistEvent(bt_notification* eventNotif)
 {
     LttngJsonReader reader;
     JsonBuilder builder = reader.DecodeEvent(eventNotif);
 
     _outputFunc(std::move(builder));
 
-    return BT_COMPONENT_STATUS_OK;
+    return BT_SELF_COMPONENT_STATUS_OK;
 }
 
-bt_component_status
-JsonBuilderSink_RunStatic(bt_private_component* private_component)
+bt_self_component_status JsonBuilderSink_RunStatic(bt_self_component_sink* self)
 {
-    auto jbSink = static_cast<JsonBuilderSink*>(
-        bt_private_component_get_user_data(private_component));
+    auto jbSink = static_cast<JsonBuilderSink*>(bt_self_component_get_data(
+        bt_self_component_sink_as_self_component(self)));
     return jbSink->Run();
 }
 
-bt_component_status JsonBuilderSink_InitStatic(
-    bt_private_component* private_component,
-    bt_value*,
-    void* initParams)
+bt_self_component_status
+JsonBuilderSink_InitStatic(bt_self_component_sink* self, const bt_value*, void* initParams)
 {
-    bt_private_component_sink_add_input_private_port(
-        private_component, "in", nullptr, nullptr);
+    bt_self_component_sink_add_input_port(self, "in", nullptr, nullptr);
 
     // Construct the JsonBuilderSink instance
 
@@ -118,40 +119,46 @@ bt_component_status JsonBuilderSink_InitStatic(
 
     // Set the user data, passing ownership in the case of success
     JsonBuilderSink* jsonBuilderSink = new JsonBuilderSink(*params->OutputFunc);
-    bt_private_component_set_user_data(private_component, jsonBuilderSink);
+    bt_self_component_set_data(
+        bt_self_component_sink_as_self_component(self), jsonBuilderSink);
 
-    return BT_COMPONENT_STATUS_OK;
+    return BT_SELF_COMPONENT_STATUS_OK;
 }
 
-void JsonBuilderSink_PortConnectedStatic(
-    bt_private_component* private_component,
-    bt_private_port* self_port,
-    bt_port* other_port)
+void JsonBuilderSink_InputPortConnectedStatic(
+    bt_self_component_sink* self,
+    bt_self_component_port_input* self_port,
+    const bt_port_output* other_port)
 {
-    auto jbSink = static_cast<JsonBuilderSink*>(
-        bt_private_component_get_user_data(private_component));
+    auto jbSink = static_cast<JsonBuilderSink*>(bt_self_component_get_data(
+        bt_self_component_sink_as_self_component(self)));
     return jbSink->PortConnected(self_port, other_port);
 }
 
-void JsonBuilderSink_FinalizeStatic(bt_private_component* private_component)
+void JsonBuilderSink_FinalizeStatic(bt_self_component_sink* self)
 {
-    auto jbSink = static_cast<JsonBuilderSink*>(
-        bt_private_component_get_user_data(private_component));
+    auto jbSink = static_cast<JsonBuilderSink*>(bt_self_component_get_data(
+        bt_self_component_sink_as_self_component(self)));
     delete jbSink;
 }
 
-BtComponentClassConstPtr GetJsonBuilderSinkComponentClass()
+BtComponentClassSinkConstPtr GetJsonBuilderSinkComponentClass()
 {
-    BtComponentClassPtr jsonBuilderSinkClass =
+    BtComponentClassSinkPtr jsonBuilderSinkClass =
         bt_component_class_sink_create("jsonbuilder", JsonBuilderSink_RunStatic);
-    bt_component_class_set_init_method(
+    bt_component_class_sink_set_init_method(
         jsonBuilderSinkClass.Get(), JsonBuilderSink_InitStatic);
-    bt_component_class_set_port_connected_method(
-        jsonBuilderSinkClass.Get(), JsonBuilderSink_PortConnectedStatic);
-    bt_component_class_set_finalize_method(
+    bt_component_class_sink_set_input_port_connected_method(
+        jsonBuilderSinkClass.Get(), JsonBuilderSink_InputPortConnectedStatic);
+    bt_component_class_sink_set_finalize_method(
         jsonBuilderSinkClass.Get(), JsonBuilderSink_FinalizeStatic);
 
-    return jsonBuilderSinkClass;
+    // TODO: Change cast to method call
+    BtComponentClassSinkConstPtr returnVal =
+        reinterpret_cast<const bt_component_class_sink*>(
+            jsonBuilderSinkClass.Detach());
+
+    return returnVal;
 }
 
 }

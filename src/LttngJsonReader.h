@@ -5,8 +5,6 @@
 
 #include <jsonbuilder/JsonBuilder.h>
 
-struct bt_notification;
-
 namespace LttngConsume {
 
 class LttngJsonReader
