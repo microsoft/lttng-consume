@@ -90,16 +90,27 @@ class BabelPtr
     BTType* _ptr;
 };
 
-#define MAKE_PTR_TYPE(BabelPtrPrefix, LibBabeltraceType)               \
-    namespace details {                                                \
-    struct BabelPtrPrefix##Details                                     \
-    {                                                                  \
-        using BTType = LibBabeltraceType;                              \
-        static void GetFunc(const BTType* p) { bt_plugin_get_ref(p); } \
-        static void PutFunc(const BTType* p) { bt_plugin_put_ref(p); } \
-    };                                                                 \
-    }                                                                  \
+#define MAKE_PTR_TYPE(BabelPtrPrefix, LibBabeltraceType) \
+    namespace details {                                  \
+    struct BabelPtrPrefix##Details                       \
+    {                                                    \
+        using BTType = LibBabeltraceType;                \
+        static void GetFunc(const BTType* p)             \
+        {                                                \
+            LibBabeltraceType##_get_ref(p);              \
+        }                                                \
+        static void PutFunc(const BTType* p)             \
+        {                                                \
+            LibBabeltraceType##_put_ref(p);              \
+        }                                                \
+    };                                                   \
+    }                                                    \
     using BabelPtrPrefix##Ptr = BabelPtr<details::BabelPtrPrefix##Details>;
 
 MAKE_PTR_TYPE(BtPlugin, bt_plugin);
+MAKE_PTR_TYPE(BtComponentClass, bt_component_class);
+MAKE_PTR_TYPE(BtValue, bt_value);
+MAKE_PTR_TYPE(BtPort, bt_port);
+MAKE_PTR_TYPE(BtGraph, bt_graph);
+MAKE_PTR_TYPE(BtComponent, bt_component);
 }

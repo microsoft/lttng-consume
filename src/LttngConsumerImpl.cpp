@@ -71,16 +71,15 @@ void LttngConsumerImpl::CreateGraph(
 
     _graph = bt_graph_create();
 
-    const bt_plugin* ctfPlugin = bt_plugin_find("ctf");
-    auto deletePlugin = bt_plugin_put_ref(ctfPlugin);
+    BtPluginPtr ctfPlugin = bt_plugin_find("ctf");
 
     // Create source component
-    BabelPtr<bt_component_class> lttngLiveClass = bt_plugin_find_component_class(
+    BtComponentClassPtr lttngLiveClass = bt_plugin_find_component_class(
         "ctf",
         "lttng-live",
         bt_component_class_type::BT_COMPONENT_CLASS_TYPE_SOURCE);
 
-    BabelPtr<bt_value> paramsMap = bt_value_map_create();
+    BtValuePtr paramsMap = bt_value_map_create();
     bt_value_map_insert_string(
         paramsMap.Get(), "url", std::string{ _listeningUrl }.c_str());
 
@@ -92,14 +91,13 @@ void LttngConsumerImpl::CreateGraph(
         &_lttngLiveSource));
 
     // Create filter component
-    BabelPtr<bt_component_class> muxerClass = bt_plugin_find_component_class(
+    BtComponentClassPtr muxerClass = bt_plugin_find_component_class(
         "utils", "muxer", bt_component_class_type::BT_COMPONENT_CLASS_TYPE_FILTER);
     CheckGraph(bt_graph_add_component(
         _graph.Get(), muxerClass.Get(), "muxer", nullptr, &_muxerFilter));
 
     // Create sink component
-    BabelPtr<bt_component_class> jsonBuilderSinkClass =
-        GetJsonBuilderSinkComponentClass();
+    BtComponentClassPtr jsonBuilderSinkClass = GetJsonBuilderSinkComponentClass();
 
     JsonBuilderSinkInitParams jbInitParams;
     jbInitParams.OutputFunc = &callback;
@@ -117,15 +115,15 @@ void LttngConsumerImpl::CreateGraph(
         0);
 
     // Wire up existing ports
-    BabelPtr<bt_port> lttngLiveSourceOutputPort =
+    BtPortPtr lttngLiveSourceOutputPort =
         bt_component_source_get_output_port_by_name(
             _lttngLiveSource.Get(), "no-stream");
-    BabelPtr<bt_port> muxerFilterInputPort =
+    BtPortPtr muxerFilterInputPort =
         bt_component_filter_get_input_port_by_name(_muxerFilter.Get(), "in0");
 
-    BabelPtr<bt_port> muxerFilterOutputPort =
+    BtPortPtr muxerFilterOutputPort =
         bt_component_filter_get_output_port_by_name(_muxerFilter.Get(), "out");
-    BabelPtr<bt_port> jsonBuilderSinkInputPort =
+    BtPortPtr jsonBuilderSinkInputPort =
         bt_component_sink_get_input_port_by_name(_jsonBuilderSink.Get(), "in");
 
     CheckGraph(bt_graph_connect_ports(
@@ -147,7 +145,7 @@ void LttngConsumerImpl::PortAddedListenerStatic(bt_port* port, void* data)
 
 void LttngConsumerImpl::PortAddedListener(bt_port* port)
 {
-    BabelPtr<bt_component> portOwningComponent = bt_port_get_component(port);
+    BtComponentPtr portOwningComponent = bt_port_get_component(port);
     if (portOwningComponent == _lttngLiveSource)
     {
         int64_t muxerInputPortCount =
@@ -156,7 +154,7 @@ void LttngConsumerImpl::PortAddedListener(bt_port* port)
 
         for (int64_t i = 0; i < muxerInputPortCount; i++)
         {
-            BabelPtr<bt_port> downstreamPort =
+            BtPortPtr downstreamPort =
                 bt_component_filter_get_input_port_by_index(_muxerFilter.Get(), i);
 
             if (!bt_port_is_connected(downstreamPort.Get()))
