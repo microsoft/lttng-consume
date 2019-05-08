@@ -124,4 +124,7 @@ MAKE_PTR_TYPE(BtComponent, bt_component);
 MAKE_PTR_TYPE(BtComponentSource, bt_component_source);
 MAKE_PTR_TYPE(BtComponentFilter, bt_component_filter);
 MAKE_PTR_TYPE(BtComponentSink, bt_component_sink);
+MAKE_PTR_TYPE(
+    BtSelfComponentPortInputMessageIterator,
+    bt_self_component_port_input_message_iterator);
 }

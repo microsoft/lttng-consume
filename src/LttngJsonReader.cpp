@@ -442,7 +442,7 @@ void AddPayload(JsonBuilder& builder, bt_event* event)
     AddFieldStruct(builder, builder.end(), "data", payloadStruct.Get());
 }
 
-JsonBuilder LttngJsonReader::DecodeEvent(bt_notification* eventNotif)
+JsonBuilder LttngJsonReader::DecodeEvent(const bt_message* eventNotif)
 {
     JsonBuilder builder;
 
