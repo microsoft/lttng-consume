@@ -12,7 +12,7 @@ namespace LttngConsume {
 class LttngJsonReader
 {
   public:
-    jsonbuilder::JsonBuilder DecodeEvent(bt_notification* event);
+    jsonbuilder::JsonBuilder DecodeEvent(const bt_message* event);
 };
 
 }

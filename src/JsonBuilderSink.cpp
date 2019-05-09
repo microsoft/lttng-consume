@@ -74,11 +74,17 @@ bt_self_component_status JsonBuilderSink::Run()
         return BT_SELF_COMPONENT_STATUS_ERROR;
     }
 
-    bt_self_component_status status = BT_SELF_COMPONENT_STATUS_OK;
     for (uint64_t i = 0; i < messageArray.Count; i++)
     {
-        status = HandleMessage(messageArray.Messages[i]);
+        bt_self_component_status selfStatus =
+            HandleMessage(messageArray.Messages[i]);
+        if (selfStatus != BT_SELF_COMPONENT_STATUS_OK)
+        {
+            return selfStatus;
+        }
     }
+
+    return BT_SELF_COMPONENT_STATUS_OK;
 }
 
 bt_self_component_status JsonBuilderSink::PortConnected(
