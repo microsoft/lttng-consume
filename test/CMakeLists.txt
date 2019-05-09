@@ -1,7 +1,7 @@
 # CMakeList.txt : CMake project for lttng-consume, include source and define
 # project specific logic here.
 #
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.7)
 
 # Add source to this project's executable.
 add_executable(lttng-consumeTest TestTracepoint.cpp TestTraceLogging.cpp Test-Tracepoint.h Test-Tracepoint.cpp CatchMain.cpp)

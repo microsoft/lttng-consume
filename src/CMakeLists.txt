@@ -1,7 +1,7 @@
 # CMakeList.txt : CMake project for lttng-consume, include source and define
 # project specific logic here.
 #
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.7)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 find_package(uuid REQUIRED)
