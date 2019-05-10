@@ -13,9 +13,7 @@ jobs:
         mkdir -p src
         mkdir -p install
         cd src
-        git clone https://github.com/efficios/babeltrace
-        cd babeltrace
-        git checkout bdff256c6ce6d8ccb873050b51480f9abf1435cc
+        git clone -b v2.0.0-pre5 https://github.com/efficios/babeltrace
         sudo apt-get install gcc libc6-dev libglib2.0-dev uuid-dev libpopt-dev automake autoconf libtool flex bison -y
         ./bootstrap
         ./configure --disable-debug-info --disable-man-pages
