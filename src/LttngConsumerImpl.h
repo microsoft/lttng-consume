@@ -49,10 +49,10 @@ class LttngConsumerImpl
     std::chrono::milliseconds _pollInterval;
     std::atomic<bool> _stopConsuming;
 
-    BtGraphPtr _graph;
-    BtComponentSourceConstPtr _lttngLiveSource;
-    BtComponentFilterConstPtr _muxerFilter;
-    BtComponentSinkConstPtr _jsonBuilderSink;
+    BabelPtr<bt_graph> _graph;
+    BabelPtr<const bt_component_source> _lttngLiveSource;
+    BabelPtr<const bt_component_filter> _muxerFilter;
+    BabelPtr<const bt_component_sink> _jsonBuilderSink;
 };
 
 }

@@ -84,13 +84,13 @@ void LttngConsumerImpl::CreateGraph(
 
     _graph = bt_graph_create();
 
-    BtPluginConstPtr ctfPlugin = bt_plugin_find("ctf");
+    BabelPtr<const bt_plugin> ctfPlugin = bt_plugin_find("ctf");
 
     const bt_component_class_source* lttngLiveClass =
         bt_plugin_borrow_source_component_class_by_name_const(
             ctfPlugin.Get(), "lttng-live");
 
-    BtValuePtr paramsMap = bt_value_map_create();
+    BabelPtr<bt_value> paramsMap = bt_value_map_create();
 
     CheckValue(bt_value_map_insert_string_entry(
         paramsMap.Get(), "url", std::string{ _listeningUrl }.c_str()));
@@ -103,7 +103,7 @@ void LttngConsumerImpl::CreateGraph(
         &_lttngLiveSource));
 
     // Create filter component
-    BtPluginConstPtr utilsPlugin = bt_plugin_find("utils");
+    BabelPtr<const bt_plugin> utilsPlugin = bt_plugin_find("utils");
 
     const bt_component_class_filter* muxerClass =
         bt_plugin_borrow_filter_component_class_by_name_const(
@@ -113,7 +113,7 @@ void LttngConsumerImpl::CreateGraph(
         _graph.Get(), muxerClass, "muxer", nullptr, &_muxerFilter));
 
     // Create sink component
-    BtComponentClassSinkConstPtr jsonBuilderSinkClass =
+    BabelPtr<const bt_component_class_sink> jsonBuilderSinkClass =
         GetJsonBuilderSinkComponentClass();
 
     JsonBuilderSinkInitParams jbInitParams;

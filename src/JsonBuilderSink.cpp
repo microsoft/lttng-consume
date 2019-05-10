@@ -35,7 +35,7 @@ class JsonBuilderSink
     bt_self_component_status HandleMessage(const bt_message* message);
 
   private:
-    BtSelfComponentPortInputMessageIteratorPtr _messageItr;
+    BabelPtr<bt_self_component_port_input_message_iterator> _messageItr;
     std::function<void(JsonBuilder&&)>& _outputFunc;
 };
 
@@ -158,9 +158,9 @@ void JsonBuilderSink_FinalizeStatic(bt_self_component_sink* self)
     delete jbSink;
 }
 
-BtComponentClassSinkConstPtr GetJsonBuilderSinkComponentClass()
+BabelPtr<const bt_component_class_sink> GetJsonBuilderSinkComponentClass()
 {
-    BtComponentClassSinkPtr jsonBuilderSinkClass =
+    BabelPtr<bt_component_class_sink> jsonBuilderSinkClass =
         bt_component_class_sink_create("jsonbuilder", JsonBuilderSink_RunStatic);
     bt_component_class_sink_set_init_method(
         jsonBuilderSinkClass.Get(), JsonBuilderSink_InitStatic);
@@ -169,10 +169,8 @@ BtComponentClassSinkConstPtr GetJsonBuilderSinkComponentClass()
     bt_component_class_sink_set_finalize_method(
         jsonBuilderSinkClass.Get(), JsonBuilderSink_FinalizeStatic);
 
-    // TODO: Change cast to method call
-    BtComponentClassSinkConstPtr returnVal =
-        reinterpret_cast<const bt_component_class_sink*>(
-            jsonBuilderSinkClass.Detach());
+    BabelPtr<const bt_component_class_sink> returnVal =
+        jsonBuilderSinkClass.Detach();
 
     return returnVal;
 }
