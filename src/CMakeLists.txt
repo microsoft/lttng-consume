@@ -8,7 +8,7 @@ find_package(uuid REQUIRED)
 find_package(babeltrace REQUIRED)
 
 set(LC_PrivateHeaders BabelPtr.h LttngConsumerImpl.h FailureHelpers.h JsonBuilderSink.h LttngJsonReader.h)
-set(LC_SourceFiles LttngConsumer.cpp LttngConsumerImpl.cpp JsonBuilderSink.cpp LttngJsonReader.cpp)
+set(LC_SourceFiles LttngConsumer.cpp LttngConsumerImpl.cpp LttngJsonReader.cpp JsonBuilderSink.cpp)
 
 set(PublicHeaderSrcPrefix ${PROJECT_SOURCE_DIR}/include/lttng-consume)
 set(LC_PublicHeaders ${PublicHeaderSrcPrefix}/LttngConsumer.h)

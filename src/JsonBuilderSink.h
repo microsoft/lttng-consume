@@ -15,7 +15,7 @@ class JsonBuilder;
 
 namespace LttngConsume {
 
-BabelPtr<bt_component_class> GetJsonBuilderSinkComponentClass();
+BabelPtr<const bt_component_class_sink> GetJsonBuilderSinkComponentClass();
 
 struct JsonBuilderSinkInitParams
 {

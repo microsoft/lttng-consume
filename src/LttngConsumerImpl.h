@@ -11,10 +11,6 @@
 
 #include "BabelPtr.h"
 
-struct bt_component;
-struct bt_graph;
-struct bt_port;
-
 namespace jsonbuilder {
 class JsonBuilder;
 }
@@ -33,11 +29,16 @@ class LttngConsumerImpl
     void StopConsuming();
 
   private:
-    static void PortAddedListenerStatic(bt_port* port, void* data);
+    static void SourceComponentOutputPortAddedListenerStatic(
+        const bt_component_source* component,
+        const bt_port_output* port,
+        void* data);
 
     void CreateGraph(std::function<void(jsonbuilder::JsonBuilder&&)>& callback);
 
-    void PortAddedListener(bt_port* port);
+    void SourceComponentOutputPortAddedListener(
+        const bt_component_source* component,
+        const bt_port_output* port);
 
   private:
     std::string _listeningUrl;
@@ -45,9 +46,9 @@ class LttngConsumerImpl
     std::atomic<bool> _stopConsuming;
 
     BabelPtr<bt_graph> _graph;
-    BabelPtr<bt_component> _lttngLiveSource;
-    BabelPtr<bt_component> _muxerFilter;
-    BabelPtr<bt_component> _jsonBuilderSink;
+    BabelPtr<const bt_component_source> _lttngLiveSource;
+    BabelPtr<const bt_component_filter> _muxerFilter;
+    BabelPtr<const bt_component_sink> _jsonBuilderSink;
 };
 
 }

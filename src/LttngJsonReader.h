@@ -5,14 +5,14 @@
 
 #include <jsonbuilder/JsonBuilder.h>
 
-struct bt_notification;
+struct bt_message;
 
 namespace LttngConsume {
 
 class LttngJsonReader
 {
   public:
-    jsonbuilder::JsonBuilder DecodeEvent(bt_notification* event);
+    jsonbuilder::JsonBuilder DecodeEvent(const bt_message* message);
 };
 
 }
