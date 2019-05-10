@@ -115,16 +115,14 @@ class BabelPtr
     using BabelPtrPrefix##ConstPtr =                                        \
         BabelPtr<details::BabelPtrPrefix##ConstDetails>;
 
-MAKE_PTR_TYPE(BtPlugin, bt_plugin);
-MAKE_PTR_TYPE(BtComponentClassSink, bt_component_class_sink);
-MAKE_PTR_TYPE(BtValue, bt_value);
-MAKE_PTR_TYPE(BtPort, bt_port);
-MAKE_PTR_TYPE(BtGraph, bt_graph);
-MAKE_PTR_TYPE(BtComponent, bt_component);
-MAKE_PTR_TYPE(BtComponentSource, bt_component_source);
-MAKE_PTR_TYPE(BtComponentFilter, bt_component_filter);
-MAKE_PTR_TYPE(BtComponentSink, bt_component_sink);
+MAKE_PTR_TYPE(BtPlugin, bt_plugin)
+MAKE_PTR_TYPE(BtComponentClassSink, bt_component_class_sink)
+MAKE_PTR_TYPE(BtValue, bt_value)
+MAKE_PTR_TYPE(BtGraph, bt_graph)
+MAKE_PTR_TYPE(BtComponentSource, bt_component_source)
+MAKE_PTR_TYPE(BtComponentFilter, bt_component_filter)
+MAKE_PTR_TYPE(BtComponentSink, bt_component_sink)
 MAKE_PTR_TYPE(
     BtSelfComponentPortInputMessageIterator,
-    bt_self_component_port_input_message_iterator);
+    bt_self_component_port_input_message_iterator)
 }
