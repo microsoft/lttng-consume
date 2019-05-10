@@ -198,138 +198,22 @@ bool EndsWith(nonstd::string_view str, nonstd::string_view querySuffix)
     return str.substr(str.size() - querySuffix.size()) == querySuffix;
 }
 
-// bool ShouldTreatAsString(const bt_field_type* elementType)
-// {
-//     bt_field_type_id elementTypeId = bt_field_type_get_type_id(elementType);
-
-//     if (elementTypeId == BT_FIELD_TYPE_ID_INTEGER)
-//     {
-//         bt_string_encoding encoding =
-//             bt_field_type_integer_get_encoding(elementType);
-
-//         if (encoding == BT_STRING_ENCODING_ASCII ||
-//             encoding == BT_STRING_ENCODING_UTF8)
-//         {
-//             int integerSize = bt_field_type_integer_get_size(elementType);
-//             if (integerSize == std::numeric_limits<unsigned char>::digits)
-//             {
-//                 return true;
-//             }
-//         }
-//     }
-
-//     return false;
-// }
-
-// void BuildStringFromCharArrayFields(std::string& stringField, bt_field*
-// field)
-// {
-//     BabelPtr<bt_field_type> fieldType = bt_field_get_type(field);
-
-//     int signedResult =
-//     bt_ctf_field_type_integer_get_signed(fieldType.Get());
-//     FAIL_FAST_IF(signedResult < 0);
-
-//     char charVal = 0;
-//     if (signedResult == 0)
-//     {
-//         uint64_t val;
-//         FAIL_FAST_IF(bt_field_unsigned_integer_get_value(field, &val) <
-//         0); charVal = static_cast<char>(val);
-//     }
-//     else
-//     {
-//         int64_t val;
-//         FAIL_FAST_IF(bt_field_signed_integer_get_value(field, &val) < 0);
-//         FAIL_FAST_IF(val > std::numeric_limits<char>::max());
-//         FAIL_FAST_IF(val < std::numeric_limits<char>::min());
-//         charVal = static_cast<char>(val);
-//     }
-
-//     stringField.push_back(charVal);
-// }
-
-// void HandleContiguousContainer(
-//     JsonBuilder& builder,
-//     JsonBuilder::iterator itr,
-//     nonstd::string_view fieldName,
-//     bt_field* field,
-//     int numElements,
-//     bt_field_type* elementType,
-//     bt_field* (*getFieldFunc)(bt_field* field, uint64_t index))
-// {
-//     if (ShouldTreatAsString(elementType))
-//     {
-//         std::string stringField;
-//         stringField.reserve(numElements);
-//         for (int i = 0; i < numElements; i++)
-//         {
-//             BabelPtr<bt_field> elementField = getFieldFunc(field, i);
-//             BuildStringFromCharArrayFields(stringField,
-//             elementField.Get());
-//         }
-
-//         // Use .c_str() here to intentionally trim trailing
-//         nul-characters builder.push_back(itr, fieldName,
-//         stringField.c_str());
-//     }
-//     else
-//     {
-//         auto seqItr = builder.push_back(itr, fieldName, JsonArray);
-//         for (int i = 0; i < numElements; i++)
-//         {
-//             BabelPtr<bt_field> elementField = getFieldFunc(field, i);
-//             AddField(builder, seqItr, {}, elementField.Get());
-//         }
-//     }
-// }
-
-void AddFieldStaticArray(
+void AddFieldArray(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
     nonstd::string_view fieldName,
     const bt_field* field)
 {
+    auto arrayItr = builder.push_back(itr, fieldName, JsonArray);
+
     uint64_t numElements = bt_field_array_get_length(field);
+    for (uint64_t i = 0; i < numElements; i++)
+    {
+        const bt_field* elementField =
+            bt_field_array_borrow_element_field_by_index_const(field, i);
 
-    BabelPtr<bt_field_type> elementType =
-        bt_field_type_array_get_element_type(arrayType.Get());
-
-    HandleContiguousContainer(
-        builder,
-        itr,
-        fieldName,
-        field,
-        numElements,
-        elementType.Get(),
-        bt_field_array_get_field);
-}
-
-void AddFieldDynamicArray(
-    JsonBuilder& builder,
-    JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
-    const bt_field* field)
-{
-    BabelPtr<bt_field_type> seqType = bt_field_get_type(field);
-
-    BabelPtr<bt_field> lengthField = bt_field_sequence_get_length(field);
-
-    uint64_t numElements = 0;
-    FAIL_FAST_IF(
-        bt_field_unsigned_integer_get_value(lengthField.Get(), &numElements) < 0);
-
-    BabelPtr<bt_field_type> elementType =
-        bt_field_type_sequence_get_element_type(seqType.Get());
-
-    HandleContiguousContainer(
-        builder,
-        itr,
-        fieldName,
-        field,
-        numElements,
-        elementType.Get(),
-        bt_field_sequence_get_field);
+        AddField(builder, arrayItr, {}, elementField);
+    }
 }
 
 void AddField(
@@ -338,14 +222,13 @@ void AddField(
     nonstd::string_view fieldName,
     const bt_field* field)
 {
-    bt_field_class_type fieldType = bt_field_get_class_type(field);
-
     // Skip added '_foo_sequence_field_length' type fields
     if (StartsWith(fieldName, "_") && EndsWith(fieldName, "_length"))
     {
         return;
     }
 
+    bt_field_class_type fieldType = bt_field_get_class_type(field);
     switch (fieldType)
     {
     case BT_FIELD_CLASS_TYPE_SIGNED_INTEGER:
@@ -373,10 +256,8 @@ void AddField(
         AddFieldVariant(builder, itr, fieldName, field);
         break;
     case BT_FIELD_CLASS_TYPE_STATIC_ARRAY:
-        AddFieldStaticArray(builder, itr, fieldName, field);
-        break;
     case BT_FIELD_CLASS_TYPE_DYNAMIC_ARRAY:
-        AddFieldDynamicArray(builder, itr, fieldName, field);
+        AddFieldArray(builder, itr, fieldName, field);
         break;
     default:
         FAIL_FAST_IF(true);
@@ -467,7 +348,7 @@ JsonBuilder LttngJsonReader::DecodeEvent(const bt_message* message)
     AddTimestamp(builder, clock);
 
     AddPacketContext(builder, event);
-    // AddEventHeader(builder, event);
+    AddEventHeader(builder, event);
     AddStreamEventContext(builder, event);
     AddEventContext(builder, event);
     AddPayload(builder, event);
