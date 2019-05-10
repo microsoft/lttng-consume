@@ -136,7 +136,7 @@ void LttngConsumerImpl::CreateGraph(
     // Wire up existing ports
     const bt_port_output* lttngLiveSourceOutputPort =
         bt_component_source_borrow_output_port_by_name_const(
-            _lttngLiveSource.Get(), "no-stream");
+            _lttngLiveSource.Get(), "out");
     const bt_port_input* muxerFilterInputPort =
         bt_component_filter_borrow_input_port_by_name_const(
             _muxerFilter.Get(), "in0");

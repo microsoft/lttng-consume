@@ -90,7 +90,8 @@ void AddFieldSignedEnum(
     }
     else
     {
-        AddFieldSignedInteger(builder, itr, fieldName, field);
+        int64_t val = bt_field_signed_integer_get_value(field);
+        builder.push_back(itr, fieldName, std::to_string(val));
     }
 }
 
@@ -110,7 +111,8 @@ void AddFieldUnsignedEnum(
     }
     else
     {
-        AddFieldUnsignedInteger(builder, itr, fieldName, field);
+        uint64_t val = bt_field_signed_integer_get_value(field);
+        builder.push_back(itr, fieldName, std::to_string(val));
     }
 }
 
@@ -121,7 +123,9 @@ void AddFieldString(
     const bt_field* field)
 {
     const char* val = bt_field_string_get_value(field);
-    builder.push_back(itr, fieldName, val);
+    uint64_t len = bt_field_string_get_length(field);
+    builder.push_back(
+        itr, fieldName, nonstd::string_view{ val, static_cast<size_t>(len) });
 }
 
 void AddFieldStruct(
@@ -287,6 +291,11 @@ void AddEventHeader(JsonBuilder& builder, const bt_event* event)
 
     {
         const char* traceName = bt_trace_get_name(trace);
+        if (!traceName)
+        {
+            traceName = "Unknown";
+        }
+
         builder.push_back(itr, "trace", traceName);
     }
 
