@@ -51,7 +51,7 @@ This project carries on the following libraries:
 
 1) [JsonBuilder](https://github.com/Microsoft/JsonBuilder)
 2) uuid
-3) babeltrace2
+3) babeltrace2 (latest master of lttng-consume building against v2.0.0-pre5 tag)
 
 Number 1 can be gotten at the URL above and Number 2 is available via apt:
 
@@ -59,10 +59,12 @@ Number 1 can be gotten at the URL above and Number 2 is available via apt:
 sudo apt install uuid-dev
 ```
 
-For #3, there is no package release, so it needs to be built from source:
+For #3, there is no package release, so it needs to be built from source.  There are
+large breaking changes across different pre-release versions here.  lttng-consume currently
+build against the v2.0.0-pre5 tag:
 
 ```bash
-git clone https://github.com/efficios/babeltrace/tree/stable-2.0
+git clone -b v2.0.0-pre5 https://github.com/efficios/babeltrace/
 sudo apt install autoconf autoheader libtool flex bison libglib2.0-dev libpopt-dev
 ./bootstrap
 ./configure --disable-debug-info --disable-man-pages --prefix=~/install/babeltrace
