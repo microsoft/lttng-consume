@@ -11,10 +11,6 @@
 
 #include "BabelPtr.h"
 
-struct bt_component;
-struct bt_graph;
-struct bt_port;
-
 namespace jsonbuilder {
 class JsonBuilder;
 }

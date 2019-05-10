@@ -6,15 +6,11 @@
 #include <string>
 #include <thread>
 
+#include <babeltrace/babeltrace.h>
 #include <lttng-consume/LttngConsumer.h>
 
-// clang-format off
-#include <babeltrace/ctf-ir/field-types.h>
-#include <babeltrace/babeltrace.h>
-// clang-format on
-
-#include "FailureHelpers.h"
 #include "BabelPtr.h"
+#include "FailureHelpers.h"
 #include "JsonBuilderSink.h"
 
 namespace LttngConsume {

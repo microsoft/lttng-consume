@@ -6,10 +6,7 @@
 #include <array>
 #include <memory>
 
-// clang-format off
-// #include <babeltrace/ctf-ir/field-types.h>
 #include <babeltrace/babeltrace.h>
-// clang-format on
 
 #include "BabelPtr.h"
 #include "FailureHelpers.h"
@@ -116,13 +113,19 @@ bt_self_component_status JsonBuilderSink_RunStatic(bt_self_component_sink* self)
 {
     auto jbSink = static_cast<JsonBuilderSink*>(bt_self_component_get_data(
         bt_self_component_sink_as_self_component(self)));
+
     return jbSink->Run();
 }
 
 bt_self_component_status
 JsonBuilderSink_InitStatic(bt_self_component_sink* self, const bt_value*, void* initParams)
 {
-    bt_self_component_sink_add_input_port(self, "in", nullptr, nullptr);
+    bt_self_component_status status =
+        bt_self_component_sink_add_input_port(self, "in", nullptr, nullptr);
+    if (status != BT_SELF_COMPONENT_STATUS_OK)
+    {
+        return status;
+    }
 
     // Construct the JsonBuilderSink instance
 
@@ -148,6 +151,7 @@ bt_self_component_status JsonBuilderSink_InputPortConnectedStatic(
 {
     auto jbSink = static_cast<JsonBuilderSink*>(bt_self_component_get_data(
         bt_self_component_sink_as_self_component(self)));
+
     return jbSink->PortConnected(self_port, other_port);
 }
 
@@ -155,6 +159,7 @@ void JsonBuilderSink_FinalizeStatic(bt_self_component_sink* self)
 {
     auto jbSink = static_cast<JsonBuilderSink*>(bt_self_component_get_data(
         bt_self_component_sink_as_self_component(self)));
+
     delete jbSink;
 }
 

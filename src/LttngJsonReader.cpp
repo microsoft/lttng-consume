@@ -5,10 +5,7 @@
 
 #include <chrono>
 
-// clang-format off
 #include <babeltrace/babeltrace.h>
-// clang-format on
-
 #include <jsonbuilder/JsonBuilder.h>
 
 #include "BabelPtr.h"
