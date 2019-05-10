@@ -74,80 +74,44 @@ void AddFieldReal(
     builder.push_back(itr, fieldName, val);
 }
 
-void AddFieldEnum(
+void AddFieldSignedEnum(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
     nonstd::string_view fieldName,
     const bt_field* field)
 {
-    //     BabelPtr<bt_field_type> fieldType = bt_field_get_type(field);
+    const char* const* labels = nullptr;
+    uint64_t labelsCount = 0;
+    bt_field_signed_enumeration_get_mapping_labels(field, &labels, &labelsCount);
 
-    //     BabelPtr<bt_field> containerField =
-    //     bt_field_enumeration_get_container(field); BabelPtr<bt_field_type>
-    //     containerFieldType =
-    //         bt_field_get_type(containerField.Get());
+    if (labelsCount > 0)
+    {
+        builder.push_back(itr, fieldName, labels[0]);
+    }
+    else
+    {
+        AddFieldSignedInteger(builder, itr, fieldName, field);
+    }
+}
 
-    //     int signedResult =
-    //         bt_ctf_field_type_integer_get_signed(containerFieldType.Get());
-    //     FAIL_FAST_IF(signedResult < 0);
+void AddFieldUnsignedEnum(
+    JsonBuilder& builder,
+    JsonBuilder::iterator itr,
+    nonstd::string_view fieldName,
+    const bt_field* field)
+{
+    const char* const* labels = nullptr;
+    uint64_t labelsCount = 0;
+    bt_field_unsigned_enumeration_get_mapping_labels(field, &labels, &labelsCount);
 
-    //     std::string name;
-    //     BabelPtr<bt_field_type_enumeration_mapping_iterator> enumItr;
-    //     if (signedResult == 0)
-    //     {
-    //         uint64_t val = 0;
-    //         FAIL_FAST_IF(
-    //             bt_field_unsigned_integer_get_value(containerField.Get(),
-    //             &val)
-    //             != 0);
-
-    //         enumItr =
-    //         bt_field_type_enumeration_find_mappings_by_unsigned_value(
-    //             fieldType.Get(), val);
-
-    //         if
-    //         (bt_field_type_enumeration_mapping_iterator_next(enumItr.Get())
-    //         < 0)
-    //         {
-    //             name = std::to_string(val);
-    //         }
-    //         else
-    //         {
-    //             const char* namePtr = nullptr;
-    //             FAIL_FAST_IF(
-    //                 bt_field_type_enumeration_mapping_iterator_get_signed(
-    //                     enumItr.Get(), &namePtr, nullptr, nullptr) < 0);
-    //             name = namePtr;
-    //         }
-    //     }
-    //     else
-    //     {
-    //         int64_t val = 0;
-    //         FAIL_FAST_IF(
-    //             bt_field_signed_integer_get_value(containerField.Get(), &val)
-    //             != 0);
-
-    //         enumItr =
-    //         bt_field_type_enumeration_find_mappings_by_signed_value(
-    //             fieldType.Get(), val);
-
-    //         if
-    //         (bt_field_type_enumeration_mapping_iterator_next(enumItr.Get())
-    //         < 0)
-    //         {
-    //             name = std::to_string(val);
-    //         }
-    //         else
-    //         {
-    //             const char* namePtr = nullptr;
-    //             FAIL_FAST_IF(
-    //                 bt_field_type_enumeration_mapping_iterator_get_signed(
-    //                     enumItr.Get(), &namePtr, nullptr, nullptr) < 0);
-    //             name = namePtr;
-    //         }
-    //     }
-
-    //     builder.push_back(itr, fieldName, name);
+    if (labelsCount > 0)
+    {
+        builder.push_back(itr, fieldName, labels[0]);
+    }
+    else
+    {
+        AddFieldUnsignedInteger(builder, itr, fieldName, field);
+    }
 }
 
 void AddFieldString(
@@ -192,11 +156,26 @@ void AddFieldVariant(
     nonstd::string_view fieldName,
     const bt_field* field)
 {
-    // BabelPtr<bt_field> variantField =
-    // bt_field_variant_get_current_field(field);
+    const bt_field_class* fieldClass = bt_field_borrow_class_const(field);
 
-    // // Currently there is no support to list the name of the selected
-    // subfield AddField(builder, itr, fieldName, variantField.Get());
+    const bt_field* selectedOptionField =
+        bt_field_variant_borrow_selected_option_field_const(field);
+
+    uint64_t variantSubfieldIndex =
+        bt_field_variant_get_selected_option_field_index(field);
+
+    const bt_field_class_variant_option* variantSubfieldClass =
+        bt_field_class_variant_borrow_option_by_index_const(
+            fieldClass, variantSubfieldIndex);
+
+    const char* optionName =
+        bt_field_class_variant_option_get_name(variantSubfieldClass);
+
+    std::string variantFieldName = nonstd::to_string(fieldName);
+    variantFieldName += "_";
+    variantFieldName += optionName;
+
+    AddField(builder, itr, variantFieldName, selectedOptionField);
 }
 
 bool StartsWith(nonstd::string_view str, nonstd::string_view queryPrefix)
@@ -305,57 +284,52 @@ bool EndsWith(nonstd::string_view str, nonstd::string_view querySuffix)
 //     }
 // }
 
-void AddFieldArray(
+void AddFieldStaticArray(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
     nonstd::string_view fieldName,
     const bt_field* field)
 {
-    // BabelPtr<bt_field_type> arrayType = bt_field_get_type(field);
+    uint64_t numElements = bt_field_array_get_length(field);
 
-    // int64_t numElements =
-    // bt_field_type_array_get_length(arrayType.Get());
-    // FAIL_FAST_IF(numElements < 0);
+    BabelPtr<bt_field_type> elementType =
+        bt_field_type_array_get_element_type(arrayType.Get());
 
-    // BabelPtr<bt_field_type> elementType =
-    //     bt_field_type_array_get_element_type(arrayType.Get());
-
-    // HandleContiguousContainer(
-    //     builder,
-    //     itr,
-    //     fieldName,
-    //     field,
-    //     numElements,
-    //     elementType.Get(),
-    //     bt_field_array_get_field);
+    HandleContiguousContainer(
+        builder,
+        itr,
+        fieldName,
+        field,
+        numElements,
+        elementType.Get(),
+        bt_field_array_get_field);
 }
 
-void AddFieldSequence(
+void AddFieldDynamicArray(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
     nonstd::string_view fieldName,
     const bt_field* field)
 {
-    // BabelPtr<bt_field_type> seqType = bt_field_get_type(field);
+    BabelPtr<bt_field_type> seqType = bt_field_get_type(field);
 
-    // BabelPtr<bt_field> lengthField = bt_field_sequence_get_length(field);
+    BabelPtr<bt_field> lengthField = bt_field_sequence_get_length(field);
 
-    // uint64_t numElements = 0;
-    // FAIL_FAST_IF(
-    //     bt_field_unsigned_integer_get_value(lengthField.Get(),
-    //     &numElements) < 0);
+    uint64_t numElements = 0;
+    FAIL_FAST_IF(
+        bt_field_unsigned_integer_get_value(lengthField.Get(), &numElements) < 0);
 
-    // BabelPtr<bt_field_type> elementType =
-    //     bt_field_type_sequence_get_element_type(seqType.Get());
+    BabelPtr<bt_field_type> elementType =
+        bt_field_type_sequence_get_element_type(seqType.Get());
 
-    // HandleContiguousContainer(
-    //     builder,
-    //     itr,
-    //     fieldName,
-    //     field,
-    //     numElements,
-    //     elementType.Get(),
-    //     bt_field_sequence_get_field);
+    HandleContiguousContainer(
+        builder,
+        itr,
+        fieldName,
+        field,
+        numElements,
+        elementType.Get(),
+        bt_field_sequence_get_field);
 }
 
 void AddField(
@@ -384,8 +358,10 @@ void AddField(
         AddFieldReal(builder, itr, fieldName, field);
         break;
     case BT_FIELD_CLASS_TYPE_SIGNED_ENUMERATION:
+        AddFieldSignedEnum(builder, itr, fieldName, field);
+        break;
     case BT_FIELD_CLASS_TYPE_UNSIGNED_ENUMERATION:
-        AddFieldEnum(builder, itr, fieldName, field);
+        AddFieldUnsignedEnum(builder, itr, fieldName, field);
         break;
     case BT_FIELD_CLASS_TYPE_STRING:
         AddFieldString(builder, itr, fieldName, field);
@@ -397,10 +373,10 @@ void AddField(
         AddFieldVariant(builder, itr, fieldName, field);
         break;
     case BT_FIELD_CLASS_TYPE_STATIC_ARRAY:
-        AddFieldArray(builder, itr, fieldName, field);
+        AddFieldStaticArray(builder, itr, fieldName, field);
         break;
     case BT_FIELD_CLASS_TYPE_DYNAMIC_ARRAY:
-        AddFieldSequence(builder, itr, fieldName, field);
+        AddFieldDynamicArray(builder, itr, fieldName, field);
         break;
     default:
         FAIL_FAST_IF(true);
