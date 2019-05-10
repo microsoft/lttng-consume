@@ -76,11 +76,14 @@ bt_self_component_status JsonBuilderSink::Run()
 
     for (uint64_t i = 0; i < messageArray.Count; i++)
     {
-        bt_self_component_status selfStatus =
-            HandleMessage(messageArray.Messages[i]);
-        if (selfStatus != BT_SELF_COMPONENT_STATUS_OK)
+        const bt_message* message = messageArray.Messages[i];
+        if (bt_message_get_type(message) == BT_MESSAGE_TYPE_EVENT)
         {
-            return selfStatus;
+            bt_self_component_status selfStatus = HandleMessage(message);
+            if (selfStatus != BT_SELF_COMPONENT_STATUS_OK)
+            {
+                return selfStatus;
+            }
         }
     }
 
