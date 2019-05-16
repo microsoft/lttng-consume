@@ -6,7 +6,7 @@
 	url = https://github.com/catchorg/Catch2
 [submodule "external/JsonBuilder"]
 	path = external/JsonBuilder
-	url = https://github.com/Microsoft/JsonBuilder
+	url = ../../Microsoft/JsonBuilder
 [submodule "external/TraceLogging"]
 	path = external/TraceLogging
-	url = https://github.com/Microsoft/TraceLogging
+	url = ../../Microsoft/TraceLogging
