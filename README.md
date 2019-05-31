@@ -1,4 +1,4 @@
-[![Build Status](https://mscodehub.visualstudio.com/Azile/_apis/build/status/github-lttng-consume-CI?branchName=master)](https://mscodehub.visualstudio.com/Azile/_build/latest?definitionId=925&branchName=master)
+[![Build Status](https://dev.azure.com/ms/lttng-consume/_apis/build/status/microsoft.lttng-consume?branchName=master)](https://dev.azure.com/ms/lttng-consume/_build/latest?definitionId=149&branchName=master)
 
 # lttng-consume
 
