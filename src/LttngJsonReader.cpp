@@ -31,14 +31,14 @@ void AddTimestamp(JsonBuilder& builder, const bt_clock_snapshot* clock)
     auto nanos = std::chrono::nanoseconds{ nanosFromEpoch };
     std::chrono::system_clock::time_point eventTimestamp{ nanos };
 
-    builder.push_back(builder.end(), "time", eventTimestamp);
+    builder.push_back(builder.root(), "time", eventTimestamp);
 }
 
 void AddEventName(JsonBuilder& builder, const bt_event_class* eventClass)
 {
     std::string eventName{ bt_event_class_get_name(eventClass) };
     std::replace(eventName.begin(), eventName.end(), ':', '.');
-    builder.push_back(builder.end(), "name", eventName);
+    builder.push_back(builder.root(), "name", eventName);
 }
 
 void AddFieldSignedInteger(
@@ -269,7 +269,7 @@ void AddPacketContext(JsonBuilder& builder, const bt_event* event)
 {
     const bt_packet* packet = bt_event_borrow_packet_const(event);
     const bt_field* packetContext = bt_packet_borrow_context_field_const(packet);
-    AddFieldStruct(builder, builder.end(), "packetContext", packetContext);
+    AddFieldStruct(builder, builder.root(), "packetContext", packetContext);
 }
 
 void AddEventHeader(JsonBuilder& builder, const bt_event* event)
@@ -284,7 +284,7 @@ void AddEventHeader(JsonBuilder& builder, const bt_event* event)
     const bt_stream* stream = bt_packet_borrow_stream_const(packet);
     const bt_trace* trace = bt_stream_borrow_trace_const(stream);
 
-    auto itr = builder.push_back(builder.end(), "eventHeader", JsonObject);
+    auto itr = builder.push_back(builder.root(), "eventHeader", JsonObject);
 
     {
         const char* traceName = bt_trace_get_name(trace);
@@ -316,7 +316,7 @@ void AddStreamEventContext(JsonBuilder& builder, const bt_event* event)
     if (streamEventContext)
     {
         AddFieldStruct(
-            builder, builder.end(), "streamEventContext", streamEventContext);
+            builder, builder.root(), "streamEventContext", streamEventContext);
     }
 }
 
@@ -327,14 +327,14 @@ void AddEventContext(JsonBuilder& builder, const bt_event* event)
 
     if (eventContext)
     {
-        AddFieldStruct(builder, builder.end(), "eventContext", eventContext);
+        AddFieldStruct(builder, builder.root(), "eventContext", eventContext);
     }
 }
 
 void AddPayload(JsonBuilder& builder, const bt_event* event)
 {
     const bt_field* payloadStruct = bt_event_borrow_payload_field_const(event);
-    AddFieldStruct(builder, builder.end(), "data", payloadStruct);
+    AddFieldStruct(builder, builder.root(), "data", payloadStruct);
 }
 
 JsonBuilder LttngJsonReader::DecodeEvent(const bt_message* message)
