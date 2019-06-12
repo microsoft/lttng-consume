@@ -122,13 +122,20 @@ TEST_CASE("LttngConsumer TraceLogging does not crash", "[consumer]")
     REQUIRE(eventCallbacks == c_eventsToFire);
 }
 
+struct KeywordTestValue
+{
+    std::string OriginalName;
+    std::string ParsedName;
+    uint64_t Keywords;
+};
+
 void RunConsumerTestKeywords(
     LttngConsume::LttngConsumer& consumer,
-    const std::vector<std::pair<const char*, uint64_t>>& eventKeywordPairs,
+    const std::vector<KeywordTestValue>& keywordTestValues,
     int& renderCount)
 {
     consumer.StartConsuming(
-        [&eventKeywordPairs, &renderCount](JsonBuilder&& jsonBuilder) {
+        [&keywordTestValues, &renderCount](JsonBuilder&& jsonBuilder) {
             JsonRenderer renderer;
             renderer.Pretty(true);
 
@@ -140,16 +147,23 @@ void RunConsumerTestKeywords(
             REQUIRE(itr->Type() == JsonUtf8);
             REQUIRE(
                 itr->GetUnchecked<nonstd::string_view>() ==
-                eventKeywordPairs[renderCount].first);
+                keywordTestValues[renderCount].ParsedName);
 
-            itr = jsonBuilder.find("metadata");
-            REQUIRE(itr->Type() == JsonObject);
+            auto metadataItr = jsonBuilder.find("metadata");
+            REQUIRE(metadataItr->Type() == JsonObject);
+
+            itr = jsonBuilder.find(metadataItr, "lttngName");
+            REQUIRE(itr != jsonBuilder.end());
+            REQUIRE(itr->Type() == JsonUtf8);
+            REQUIRE(
+                itr->GetUnchecked<nonstd::string_view>() ==
+                keywordTestValues[renderCount].OriginalName);
 
             uint64_t keywordVal = 0;
-            itr = jsonBuilder.find(itr, "keywords");
+            itr = jsonBuilder.find(metadataItr, "keywords");
             REQUIRE(itr->Type() == JsonUInt);
             REQUIRE(itr->ConvertTo(keywordVal));
-            REQUIRE(keywordVal == eventKeywordPairs[renderCount].second);
+            REQUIRE(keywordVal == keywordTestValues[renderCount].Keywords);
 
             renderCount++;
         });
@@ -175,11 +189,19 @@ TEST_CASE("LttngConsumer parses keywords", "[consumer]")
 
     constexpr uint64_t highestBit = 0x1ull << 63;
 
-    std::vector<std::pair<const char*, uint64_t>> nameKeywordPairs = {
-        { "MyTestProviderKeywords.NoKeywords", 0 },
-        { "MyTestProviderKeywords.OneKeywordMinValue", 1 },
-        { "MyTestProviderKeywords.OneKeywordMaxValue", highestBit },
-        { "MyTestProviderKeywords.ManyKeywords", 0x1400000000000081ull }
+    std::vector<KeywordTestValue> nameKeywordPairs = {
+        { "MyTestProviderKeywords:NoKeywords;k;",
+          "MyTestProviderKeywords.NoKeywords",
+          0 },
+        { "MyTestProviderKeywords:OneKeywordMinValue;k0;",
+          "MyTestProviderKeywords.OneKeywordMinValue",
+          1 },
+        { "MyTestProviderKeywords:OneKeywordMaxValue;k63;",
+          "MyTestProviderKeywords.OneKeywordMaxValue",
+          highestBit },
+        { "MyTestProviderKeywords:ManyKeywords;k0;k7;k58;k60;",
+          "MyTestProviderKeywords.ManyKeywords",
+          0x1400000000000081ull }
     };
 
     int eventCallbacks = 0;

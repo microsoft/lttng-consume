@@ -42,6 +42,8 @@ void AddEventName(
 {
     std::string eventName{ bt_event_class_get_name(eventClass) };
 
+    builder.push_back(metadataItr, "lttngName", eventName);
+
     // Replace the : separating provider and eventname with .
     std::replace(eventName.begin(), eventName.end(), ':', '.');
 
