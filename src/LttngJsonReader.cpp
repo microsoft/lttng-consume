@@ -3,6 +3,7 @@
 
 #include "LttngJsonReader.h"
 
+#include <bitset>
 #include <chrono>
 
 #include <babeltrace/babeltrace.h>
@@ -34,10 +35,72 @@ void AddTimestamp(JsonBuilder& builder, const bt_clock_snapshot* clock)
     builder.push_back(builder.root(), "time", eventTimestamp);
 }
 
-void AddEventName(JsonBuilder& builder, const bt_event_class* eventClass)
+void AddEventName(
+    JsonBuilder& builder,
+    JsonIterator metadataItr,
+    const bt_event_class* eventClass)
 {
     std::string eventName{ bt_event_class_get_name(eventClass) };
+
+    builder.push_back(metadataItr, "lttngName", eventName);
+
+    // Replace the : separating provider and eventname with .
     std::replace(eventName.begin(), eventName.end(), ':', '.');
+
+    // Parse keywords out of event name
+    nonstd::string_view eventNameView{ eventName };
+    auto leadingSemicolonPos = eventNameView.find(';');
+    if (leadingSemicolonPos != nonstd::string_view::npos)
+    {
+        eventName.resize(leadingSemicolonPos);
+
+        // Parse ';k;' or ';k0;k2;k19;'
+        std::bitset<64> keywords = 0;
+        while (leadingSemicolonPos < eventNameView.size() - 1)
+        {
+            auto nextSemicolonPos =
+                eventNameView.find(';', leadingSemicolonPos + 1);
+            FAIL_FAST_IF(nextSemicolonPos == nonstd::string_view::npos);
+
+            FAIL_FAST_IF(eventNameView[leadingSemicolonPos + 1] != 'k');
+
+            size_t diffSemicolonPos = nextSemicolonPos - leadingSemicolonPos;
+            FAIL_FAST_IF(diffSemicolonPos < 2);
+            FAIL_FAST_IF(diffSemicolonPos > 4);
+
+            // ';kX;' or ';kXY;'
+            if (diffSemicolonPos >= 3)
+            {
+                char ch = eventNameView[leadingSemicolonPos + 2];
+                FAIL_FAST_IF(ch < '0' || ch > '9');
+
+                // [0, 63] final value
+                int keywordBit = ch - '0';
+
+                // ';kXY;' only
+                if (diffSemicolonPos == 4)
+                {
+                    // Previously parsed value was actually tens digit
+                    keywordBit *= 10;
+
+                    ch = eventNameView[leadingSemicolonPos + 3];
+                    FAIL_FAST_IF(ch < '0' || ch > '9');
+
+                    keywordBit += (ch - '0');
+                }
+
+                FAIL_FAST_IF(keywordBit < 0);
+                FAIL_FAST_IF(keywordBit > 63);
+
+                keywords.set(keywordBit);
+            }
+
+            leadingSemicolonPos = nextSemicolonPos;
+        }
+
+        builder.push_back(metadataItr, "keywords", keywords.to_ullong());
+    }
+
     builder.push_back(builder.root(), "name", eventName);
 }
 
@@ -344,7 +407,9 @@ JsonBuilder LttngJsonReader::DecodeEvent(const bt_message* message)
     const bt_event* event = bt_message_event_borrow_event_const(message);
     const bt_event_class* eventClass = bt_event_borrow_class_const(event);
 
-    AddEventName(builder, eventClass);
+    auto metadataItr = builder.push_back(builder.root(), "metadata", JsonObject);
+
+    AddEventName(builder, metadataItr, eventClass);
 
     const bt_clock_snapshot* clock = nullptr;
     bt_clock_snapshot_state clockState =
