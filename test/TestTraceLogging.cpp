@@ -15,6 +15,10 @@ TRACELOGGING_DEFINE_PROVIDER(
     g_provider,
     "MyTestProvider",
     (0xb3864c38, 0x4273, 0x58c5, 0x54, 0x5b, 0x8b, 0x36, 0x08, 0x34, 0x34, 0x71));
+TRACELOGGING_DEFINE_PROVIDER(
+    g_providerKeywords,
+    "MyTestProviderKeywords",
+    (0xb3864c38, 0x4273, 0x58c5, 0x54, 0x5b, 0x8b, 0x36, 0x08, 0x34, 0x34, 0x72));
 
 using namespace jsonbuilder;
 
@@ -156,7 +160,7 @@ TEST_CASE("LttngConsumer parses keywords", "[consumer]")
     system("lttng destroy lttngconsume-tracelogging-keywords");
     system("lttng create lttngconsume-tracelogging-keywords --live");
     system(
-        "lttng enable-event -s lttngconsume-tracelogging-keywords --userspace MyTestProvider:*");
+        "lttng enable-event -s lttngconsume-tracelogging-keywords --userspace MyTestProviderKeywords:*");
     system(
         "lttng add-context -s lttngconsume-tracelogging-keywords -u -t procname -t vpid");
     system("lttng start lttngconsume-tracelogging-keywords");
@@ -164,20 +168,18 @@ TEST_CASE("LttngConsumer parses keywords", "[consumer]")
     std::this_thread::sleep_for(std::chrono::seconds{ 1 });
 
     std::string connectionString =
-        MakeConnectionString("lttngconsume-tracelogging");
+        MakeConnectionString("lttngconsume-tracelogging-keywords");
 
     LttngConsume::LttngConsumer consumer{ connectionString,
                                           std::chrono::milliseconds{ 50 } };
 
-    constexpr int c_eventsToFire = 1;
-
     constexpr uint64_t highestBit = 0x1ull << 63;
 
     std::vector<std::pair<const char*, uint64_t>> nameKeywordPairs = {
-        { "NoKeywords", 0 },
-        { "OneKeywordMinValue", 1 },
-        { "OneKeywordMaxValue", highestBit },
-        { "AllKeywords", std::numeric_limits<uint64_t>::max() }
+        { "MyTestProviderKeywords.NoKeywords", 0 },
+        { "MyTestProviderKeywords.OneKeywordMinValue", 1 },
+        { "MyTestProviderKeywords.OneKeywordMaxValue", highestBit },
+        { "MyTestProviderKeywords.ManyKeywords", 0x1400000000000081ull }
     };
 
     int eventCallbacks = 0;
@@ -186,23 +188,24 @@ TEST_CASE("LttngConsumer parses keywords", "[consumer]")
                                    std::cref(nameKeywordPairs),
                                    std::ref(eventCallbacks) };
 
-    TraceLoggingRegister(g_provider);
+    TraceLoggingRegister(g_providerKeywords);
 
-    TraceLoggingWrite(g_provider, "NoKeywords");
-    TraceLoggingWrite(g_provider, "OneKeywordMinValue", TraceLoggingKeyword(0x1));
+    TraceLoggingWrite(g_providerKeywords, "NoKeywords");
     TraceLoggingWrite(
-        g_provider, "OneKeywordMaxValue", TraceLoggingKeyword(highestBit));
+        g_providerKeywords, "OneKeywordMinValue", TraceLoggingKeyword(0x1));
     TraceLoggingWrite(
-        g_provider,
-        "AllKeywords",
-        TraceLoggingKeyword(std::numeric_limits<uint64_t>::max()));
+        g_providerKeywords, "OneKeywordMaxValue", TraceLoggingKeyword(highestBit));
+    TraceLoggingWrite(
+        g_providerKeywords,
+        "ManyKeywords",
+        TraceLoggingKeyword(0x1400000000000081ull));
 
-    TraceLoggingUnregister(g_provider);
+    TraceLoggingUnregister(g_providerKeywords);
 
     std::this_thread::sleep_for(std::chrono::seconds{ 2 });
 
     consumer.StopConsuming();
     consumptionThread.join();
 
-    REQUIRE(eventCallbacks == c_eventsToFire);
+    REQUIRE(eventCallbacks == nameKeywordPairs.size());
 }
