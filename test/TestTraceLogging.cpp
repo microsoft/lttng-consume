@@ -117,3 +117,92 @@ TEST_CASE("LttngConsumer TraceLogging does not crash", "[consumer]")
 
     REQUIRE(eventCallbacks == c_eventsToFire);
 }
+
+void RunConsumerTestKeywords(
+    LttngConsume::LttngConsumer& consumer,
+    const std::vector<std::pair<const char*, uint64_t>>& eventKeywordPairs,
+    int& renderCount)
+{
+    consumer.StartConsuming(
+        [&eventKeywordPairs, &renderCount](JsonBuilder&& jsonBuilder) {
+            JsonRenderer renderer;
+            renderer.Pretty(true);
+
+            nonstd::string_view jsonString = renderer.Render(jsonBuilder);
+            REQUIRE(!jsonString.empty());
+
+            auto itr = jsonBuilder.find("name");
+            REQUIRE(itr != jsonBuilder.end());
+            REQUIRE(itr->Type() == JsonUtf8);
+            REQUIRE(
+                itr->GetUnchecked<nonstd::string_view>() ==
+                eventKeywordPairs[renderCount].first);
+
+            itr = jsonBuilder.find("metadata");
+            REQUIRE(itr->Type() == JsonObject);
+
+            uint64_t keywordVal = 0;
+            itr = jsonBuilder.find(itr, "keywords");
+            REQUIRE(itr->Type() == JsonUInt);
+            REQUIRE(itr->ConvertTo(keywordVal));
+            REQUIRE(keywordVal == eventKeywordPairs[renderCount].second);
+
+            renderCount++;
+        });
+}
+
+TEST_CASE("LttngConsumer parses keywords", "[consumer]")
+{
+    system("lttng destroy lttngconsume-tracelogging-keywords");
+    system("lttng create lttngconsume-tracelogging-keywords --live");
+    system(
+        "lttng enable-event -s lttngconsume-tracelogging-keywords --userspace MyTestProvider:*");
+    system(
+        "lttng add-context -s lttngconsume-tracelogging-keywords -u -t procname -t vpid");
+    system("lttng start lttngconsume-tracelogging-keywords");
+
+    std::this_thread::sleep_for(std::chrono::seconds{ 1 });
+
+    std::string connectionString =
+        MakeConnectionString("lttngconsume-tracelogging");
+
+    LttngConsume::LttngConsumer consumer{ connectionString,
+                                          std::chrono::milliseconds{ 50 } };
+
+    constexpr int c_eventsToFire = 1;
+
+    constexpr uint64_t highestBit = 0x1ull << 63;
+
+    std::vector<std::pair<const char*, uint64_t>> nameKeywordPairs = {
+        { "NoKeywords", 0 },
+        { "OneKeywordMinValue", 1 },
+        { "OneKeywordMaxValue", highestBit },
+        { "AllKeywords", std::numeric_limits<uint64_t>::max() }
+    };
+
+    int eventCallbacks = 0;
+    std::thread consumptionThread{ RunConsumerTestKeywords,
+                                   std::ref(consumer),
+                                   std::cref(nameKeywordPairs),
+                                   std::ref(eventCallbacks) };
+
+    TraceLoggingRegister(g_provider);
+
+    TraceLoggingWrite(g_provider, "NoKeywords");
+    TraceLoggingWrite(g_provider, "OneKeywordMinValue", TraceLoggingKeyword(0x1));
+    TraceLoggingWrite(
+        g_provider, "OneKeywordMaxValue", TraceLoggingKeyword(highestBit));
+    TraceLoggingWrite(
+        g_provider,
+        "AllKeywords",
+        TraceLoggingKeyword(std::numeric_limits<uint64_t>::max()));
+
+    TraceLoggingUnregister(g_provider);
+
+    std::this_thread::sleep_for(std::chrono::seconds{ 2 });
+
+    consumer.StopConsuming();
+    consumptionThread.join();
+
+    REQUIRE(eventCallbacks == c_eventsToFire);
+}
