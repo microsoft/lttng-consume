@@ -3,7 +3,7 @@
 #
 cmake_minimum_required(VERSION 3.7)
 
-project(lttng-consume)
+project(lttng-consume VERSION 0.1)
 
 set(LTTNGCONSUME_ENABLE_TESTING TRUE CACHE BOOL "build test dir" )
 
