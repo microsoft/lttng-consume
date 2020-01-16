@@ -25,9 +25,9 @@ void AddField(
 void AddTimestamp(JsonBuilder& builder, const bt_clock_snapshot* clock)
 {
     int64_t nanosFromEpoch = 0;
-    bt_clock_snapshot_status clockStatus =
+    bt_clock_snapshot_get_ns_from_origin_status clockStatus =
         bt_clock_snapshot_get_ns_from_origin(clock, &nanosFromEpoch);
-    FAIL_FAST_IF(clockStatus != BT_CLOCK_SNAPSHOT_STATUS_OK);
+    FAIL_FAST_IF(clockStatus != BT_CLOCK_SNAPSHOT_GET_NS_FROM_ORIGIN_STATUS_OK);
 
     auto nanos = std::chrono::nanoseconds{ nanosFromEpoch };
     std::chrono::system_clock::time_point eventTimestamp{ nanos };
@@ -110,7 +110,7 @@ void AddFieldSignedInteger(
     nonstd::string_view fieldName,
     const bt_field* field)
 {
-    int64_t val = bt_field_signed_integer_get_value(field);
+    int64_t val = bt_field_integer_signed_get_value(field);
     builder.push_back(itr, fieldName, val);
 }
 
@@ -120,7 +120,7 @@ void AddFieldUnsignedInteger(
     nonstd::string_view fieldName,
     const bt_field* field)
 {
-    uint64_t val = bt_field_unsigned_integer_get_value(field);
+    uint64_t val = bt_field_integer_unsigned_get_value(field);
     builder.push_back(itr, fieldName, val);
 }
 
@@ -130,7 +130,8 @@ void AddFieldReal(
     nonstd::string_view fieldName,
     const bt_field* field)
 {
-    double val = bt_field_real_get_value(field);
+    // TODO: single precision?
+    double val = bt_field_real_double_precision_get_value(field);
     builder.push_back(itr, fieldName, val);
 }
 
@@ -142,7 +143,7 @@ void AddFieldSignedEnum(
 {
     const char* const* labels = nullptr;
     uint64_t labelsCount = 0;
-    bt_field_signed_enumeration_get_mapping_labels(field, &labels, &labelsCount);
+    bt_field_enumeration_signed_get_mapping_labels(field, &labels, &labelsCount);
 
     if (labelsCount > 0)
     {
@@ -150,7 +151,7 @@ void AddFieldSignedEnum(
     }
     else
     {
-        int64_t val = bt_field_signed_integer_get_value(field);
+        int64_t val = bt_field_integer_signed_get_value(field);
         builder.push_back(itr, fieldName, std::to_string(val));
     }
 }
@@ -163,7 +164,7 @@ void AddFieldUnsignedEnum(
 {
     const char* const* labels = nullptr;
     uint64_t labelsCount = 0;
-    bt_field_unsigned_enumeration_get_mapping_labels(field, &labels, &labelsCount);
+    bt_field_enumeration_unsigned_get_mapping_labels(field, &labels, &labelsCount);
 
     if (labelsCount > 0)
     {
@@ -171,7 +172,7 @@ void AddFieldUnsignedEnum(
     }
     else
     {
-        uint64_t val = bt_field_signed_integer_get_value(field);
+        uint64_t val = bt_field_integer_unsigned_get_value(field);
         builder.push_back(itr, fieldName, std::to_string(val));
     }
 }
@@ -337,12 +338,6 @@ void AddPacketContext(JsonBuilder& builder, const bt_event* event)
 
 void AddEventHeader(JsonBuilder& builder, const bt_event* event)
 {
-    const bt_event_class* eventClass = bt_event_borrow_class_const(event);
-    const bt_stream_class* streamClass =
-        bt_event_class_borrow_stream_class_const(eventClass);
-    const bt_trace_class* traceClass =
-        bt_stream_class_borrow_trace_class_const(streamClass);
-
     const bt_packet* packet = bt_event_borrow_packet_const(event);
     const bt_stream* stream = bt_packet_borrow_stream_const(packet);
     const bt_trace* trace = bt_stream_borrow_trace_const(stream);
@@ -357,17 +352,17 @@ void AddEventHeader(JsonBuilder& builder, const bt_event* event)
         }
 
         builder.push_back(itr, "trace", traceName);
-    }
 
-    uint64_t count = bt_trace_class_get_environment_entry_count(traceClass);
-    for (uint64_t i = 0; i < count; i++)
-    {
-        const char* name = nullptr;
-        const bt_value* val = nullptr;
-        bt_trace_class_borrow_environment_entry_by_index_const(
-            traceClass, i, &name, &val);
+        uint64_t count = bt_trace_get_environment_entry_count(trace);
+        for (uint64_t i = 0; i < count; i++)
+        {
+            const char* name = nullptr;
+            const bt_value* val = nullptr;
+            bt_trace_borrow_environment_entry_by_index_const(
+                trace, i, &name, &val);
 
-        // TODO: Add these values to the jsonBuilder
+            // TODO: Add these values to the jsonBuilder
+        }
     }
 }
 
@@ -411,10 +406,8 @@ JsonBuilder LttngJsonReader::DecodeEvent(const bt_message* message)
 
     AddEventName(builder, metadataItr, eventClass);
 
-    const bt_clock_snapshot* clock = nullptr;
-    bt_clock_snapshot_state clockState =
-        bt_message_event_borrow_default_clock_snapshot_const(message, &clock);
-    FAIL_FAST_IF(clockState != BT_CLOCK_SNAPSHOT_STATE_KNOWN);
+    const bt_clock_snapshot* clock =
+        bt_message_event_borrow_default_clock_snapshot_const(message);
 
     AddTimestamp(builder, clock);
 
