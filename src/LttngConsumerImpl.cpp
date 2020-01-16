@@ -28,18 +28,18 @@ void LttngConsumerImpl::StartConsuming(
 {
     CreateGraph(callback);
 
-    bt_graph_status status;
-    while ((status = bt_graph_run(_graph.Get())) == BT_GRAPH_STATUS_AGAIN &&
+    bt_graph_run_status status;
+    while ((status = bt_graph_run(_graph.Get())) == BT_GRAPH_RUN_STATUS_AGAIN &&
            !_stopConsuming)
     {
         std::this_thread::sleep_for(_pollInterval);
     }
 
-    if (status != BT_GRAPH_STATUS_AGAIN)
+    if (status != BT_GRAPH_RUN_STATUS_AGAIN)
     {
         std::cerr << "Final graph status: " << status << std::endl;
     }
-    FAIL_FAST_IF(status != BT_GRAPH_STATUS_AGAIN);
+    FAIL_FAST_IF(status != BT_GRAPH_RUN_STATUS_AGAIN);
 }
 
 void LttngConsumerImpl::StopConsuming()
@@ -47,26 +47,13 @@ void LttngConsumerImpl::StopConsuming()
     _stopConsuming = true;
 }
 
-static void CheckGraph(bt_graph_status status)
+static void CheckBtError(int32_t status)
 {
     switch (status)
     {
-    case BT_GRAPH_STATUS_OK:
+    case BT_GRAPH_RUN_STATUS_OK:
         return;
-    case BT_GRAPH_STATUS_NOMEM:
-        throw std::bad_alloc();
-    default:
-        std::terminate();
-    }
-}
-
-static void CheckValue(bt_value_status status)
-{
-    switch (status)
-    {
-    case BT_VALUE_STATUS_OK:
-        return;
-    case BT_VALUE_STATUS_NOMEM:
+    case BT_GRAPH_RUN_STATUS_MEMORY_ERROR:
         throw std::bad_alloc();
     default:
         std::terminate();
@@ -76,11 +63,15 @@ static void CheckValue(bt_value_status status)
 void LttngConsumerImpl::CreateGraph(
     std::function<void(jsonbuilder::JsonBuilder&&)>& callback)
 {
-    bt_logging_set_global_level(BT_LOGGING_LEVEL_WARN);
+    bt_logging_set_global_level(BT_LOGGING_LEVEL_WARNING);
 
-    _graph = bt_graph_create();
+    _graph = bt_graph_create(0);
 
-    BabelPtr<const bt_plugin> ctfPlugin = bt_plugin_find("ctf");
+    BabelPtr<const bt_plugin> ctfPlugin;
+
+    bt_plugin_find_status pluginFindStatus = bt_plugin_find(
+        "ctf", BT_FALSE, BT_FALSE, BT_TRUE, BT_FALSE, BT_TRUE, &ctfPlugin);
+    CheckBtError(pluginFindStatus);
 
     const bt_component_class_source* lttngLiveClass =
         bt_plugin_borrow_source_component_class_by_name_const(
@@ -88,25 +79,35 @@ void LttngConsumerImpl::CreateGraph(
 
     BabelPtr<bt_value> paramsMap = bt_value_map_create();
 
-    CheckValue(bt_value_map_insert_string_entry(
+    CheckBtError(bt_value_map_insert_string_entry(
         paramsMap.Get(), "url", std::string{ _listeningUrl }.c_str()));
 
-    CheckGraph(bt_graph_add_source_component(
+    CheckBtError(bt_graph_add_source_component(
         _graph.Get(),
         lttngLiveClass,
         "liveInput",
         paramsMap.Get(),
+        BT_LOGGING_LEVEL_INFO,
         &_lttngLiveSource));
 
     // Create filter component
-    BabelPtr<const bt_plugin> utilsPlugin = bt_plugin_find("utils");
+    BabelPtr<const bt_plugin> utilsPlugin;
+
+    pluginFindStatus = bt_plugin_find(
+        "utils", BT_FALSE, BT_FALSE, BT_TRUE, BT_FALSE, BT_TRUE, &utilsPlugin);
+    CheckBtError(pluginFindStatus);
 
     const bt_component_class_filter* muxerClass =
         bt_plugin_borrow_filter_component_class_by_name_const(
             utilsPlugin.Get(), "muxer");
 
-    CheckGraph(bt_graph_add_filter_component(
-        _graph.Get(), muxerClass, "muxer", nullptr, &_muxerFilter));
+    CheckBtError(bt_graph_add_filter_component(
+        _graph.Get(),
+        muxerClass,
+        "muxer",
+        nullptr,
+        BT_LOGGING_LEVEL_INFO,
+        &_muxerFilter));
 
     // Create sink component
     BabelPtr<const bt_component_class_sink> jsonBuilderSinkClass =
@@ -114,15 +115,17 @@ void LttngConsumerImpl::CreateGraph(
 
     JsonBuilderSinkInitParams jbInitParams;
     jbInitParams.OutputFunc = &callback;
-    CheckGraph(bt_graph_add_sink_component_with_init_method_data(
+
+    CheckBtError(bt_graph_add_sink_component_with_initialize_method_data(
         _graph.Get(),
         jsonBuilderSinkClass.Get(),
         "jsonbuildersinkinst",
         nullptr,
         &jbInitParams,
+        BT_LOGGING_LEVEL_INFO,
         &_jsonBuilderSink));
 
-    CheckGraph(bt_graph_add_source_component_output_port_added_listener(
+    CheckBtError(bt_graph_add_source_component_output_port_added_listener(
         _graph.Get(),
         SourceComponentOutputPortAddedListenerStatic,
         nullptr,
@@ -144,22 +147,24 @@ void LttngConsumerImpl::CreateGraph(
         bt_component_sink_borrow_input_port_by_name_const(
             _jsonBuilderSink.Get(), "in");
 
-    CheckGraph(bt_graph_connect_ports(
+    CheckBtError(bt_graph_connect_ports(
         _graph.Get(), lttngLiveSourceOutputPort, muxerFilterInputPort, nullptr));
-    CheckGraph(bt_graph_connect_ports(
+    CheckBtError(bt_graph_connect_ports(
         _graph.Get(), muxerFilterOutputPort, jsonBuilderSinkInputPort, nullptr));
 }
 
-void LttngConsumerImpl::SourceComponentOutputPortAddedListenerStatic(
+bt_graph_listener_func_status
+LttngConsumerImpl::SourceComponentOutputPortAddedListenerStatic(
     const bt_component_source* component,
     const bt_port_output* port,
     void* data)
 {
-    static_cast<LttngConsumerImpl*>(data)->SourceComponentOutputPortAddedListener(
-        component, port);
+    return static_cast<LttngConsumerImpl*>(data)
+        ->SourceComponentOutputPortAddedListener(component, port);
 }
 
-void LttngConsumerImpl::SourceComponentOutputPortAddedListener(
+bt_graph_listener_func_status
+LttngConsumerImpl::SourceComponentOutputPortAddedListener(
     const bt_component_source* component,
     const bt_port_output* port)
 {
@@ -177,9 +182,9 @@ void LttngConsumerImpl::SourceComponentOutputPortAddedListener(
 
         if (!bt_port_is_connected(bt_port_input_as_port_const(downstreamPort)))
         {
-            CheckGraph(bt_graph_connect_ports(
+            CheckBtError(bt_graph_connect_ports(
                 _graph.Get(), port, downstreamPort, nullptr));
-            return;
+            return BT_GRAPH_LISTENER_FUNC_STATUS_OK;
         }
     }
 

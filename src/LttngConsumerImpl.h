@@ -29,14 +29,15 @@ class LttngConsumerImpl
     void StopConsuming();
 
   private:
-    static void SourceComponentOutputPortAddedListenerStatic(
+    static bt_graph_listener_func_status
+    SourceComponentOutputPortAddedListenerStatic(
         const bt_component_source* component,
         const bt_port_output* port,
         void* data);
 
     void CreateGraph(std::function<void(jsonbuilder::JsonBuilder&&)>& callback);
 
-    void SourceComponentOutputPortAddedListener(
+    bt_graph_listener_func_status SourceComponentOutputPortAddedListener(
         const bt_component_source* component,
         const bt_port_output* port);
 
