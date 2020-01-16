@@ -5,7 +5,7 @@
 
 #include <type_traits>
 
-#include <babeltrace/babeltrace.h>
+#include <babeltrace2/babeltrace.h>
 
 namespace LttngConsume {
 

@@ -6,7 +6,7 @@
 #include <array>
 #include <memory>
 
-#include <babeltrace/babeltrace.h>
+#include <babeltrace2/babeltrace.h>
 
 #include "BabelPtr.h"
 #include "FailureHelpers.h"

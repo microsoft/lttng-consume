@@ -6,7 +6,7 @@
 #include <bitset>
 #include <chrono>
 
-#include <babeltrace/babeltrace.h>
+#include <babeltrace2/babeltrace.h>
 #include <jsonbuilder/JsonBuilder.h>
 
 #include "BabelPtr.h"

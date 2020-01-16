@@ -6,7 +6,7 @@
 #include <string>
 #include <thread>
 
-#include <babeltrace/babeltrace.h>
+#include <babeltrace2/babeltrace.h>
 #include <lttng-consume/LttngConsumer.h>
 
 #include "BabelPtr.h"
