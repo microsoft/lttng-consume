@@ -77,10 +77,15 @@ void LttngConsumerImpl::CreateGraph(
         bt_plugin_borrow_source_component_class_by_name_const(
             ctfPlugin.Get(), "lttng-live");
 
-    BabelPtr<bt_value> paramsMap = bt_value_map_create();
+    BabelPtr<bt_value> urlArray = bt_value_array_create();
+    CheckBtError(bt_value_array_append_string_element(
+        urlArray.Get(), std::string{ _listeningUrl }.c_str()));
 
+    BabelPtr<bt_value> paramsMap = bt_value_map_create();
+    CheckBtError(
+        bt_value_map_insert_entry(paramsMap.Get(), "inputs", urlArray.Get()));
     CheckBtError(bt_value_map_insert_string_entry(
-        paramsMap.Get(), "url", std::string{ _listeningUrl }.c_str()));
+        paramsMap.Get(), "session-not-found-action", "continue"));
 
     CheckBtError(bt_graph_add_source_component(
         _graph.Get(),

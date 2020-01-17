@@ -24,9 +24,11 @@ class JsonBuilderSink
 
     bt_component_class_sink_consume_method_status Run();
 
-    bt_component_class_port_connected_method_status PortConnected(
-        bt_self_component_sink* self,
-        bt_self_component_port_input* inputPort);
+    bt_component_class_sink_graph_is_configured_method_status
+    GraphIsConfigured(bt_self_component_sink* self);
+
+  public:
+    static constexpr const char* c_inputPortName = "in";
 
   private:
     void HandleMessage(const bt_message* message);
@@ -83,22 +85,24 @@ bt_component_class_sink_consume_method_status JsonBuilderSink::Run()
     return BT_COMPONENT_CLASS_SINK_CONSUME_METHOD_STATUS_OK;
 }
 
-bt_component_class_port_connected_method_status JsonBuilderSink::PortConnected(
-    bt_self_component_sink* self,
-    bt_self_component_port_input* inputPort)
+bt_component_class_sink_graph_is_configured_method_status
+JsonBuilderSink::GraphIsConfigured(bt_self_component_sink* self)
 {
+    bt_self_component_port_input* inputPort =
+        bt_self_component_sink_borrow_input_port_by_name(self, c_inputPortName);
+
     bt_self_component_port_input_message_iterator_create_from_sink_component_status status =
         bt_self_component_port_input_message_iterator_create_from_sink_component(
             self, inputPort, &_messageItr);
     if (status !=
         BT_SELF_COMPONENT_PORT_INPUT_MESSAGE_ITERATOR_CREATE_FROM_SINK_COMPONENT_STATUS_OK)
     {
-        return static_cast<bt_component_class_port_connected_method_status>(
+        return static_cast<bt_component_class_sink_graph_is_configured_method_status>(
             status);
     }
     FAIL_FAST_IF(!_messageItr);
 
-    return BT_COMPONENT_CLASS_PORT_CONNECTED_METHOD_STATUS_OK;
+    return BT_COMPONENT_CLASS_SINK_GRAPH_IS_CONFIGURED_METHOD_STATUS_OK;
 }
 
 void JsonBuilderSink::HandleMessage(const bt_message* message)
@@ -125,7 +129,8 @@ bt_component_class_initialize_method_status JsonBuilderSink_InitStatic(
     void* init_method_data)
 {
     bt_self_component_add_port_status addPortStatus =
-        bt_self_component_sink_add_input_port(self, "in", nullptr, nullptr);
+        bt_self_component_sink_add_input_port(
+            self, JsonBuilderSink::c_inputPortName, nullptr, nullptr);
     if (addPortStatus != BT_SELF_COMPONENT_ADD_PORT_STATUS_OK)
     {
         return static_cast<bt_component_class_initialize_method_status>(
@@ -149,16 +154,13 @@ bt_component_class_initialize_method_status JsonBuilderSink_InitStatic(
     return BT_COMPONENT_CLASS_INITIALIZE_METHOD_STATUS_OK;
 }
 
-bt_component_class_port_connected_method_status
-JsonBuilderSink_InputPortConnectedStatic(
-    bt_self_component_sink* self,
-    bt_self_component_port_input* self_port,
-    const bt_port_output*)
+bt_component_class_sink_graph_is_configured_method_status
+JsonBuilderSink_GraphIsConfiguredStatic(bt_self_component_sink* self)
 {
     auto jbSink = static_cast<JsonBuilderSink*>(bt_self_component_get_data(
         bt_self_component_sink_as_self_component(self)));
 
-    return jbSink->PortConnected(self, self_port);
+    return jbSink->GraphIsConfigured(self);
 }
 
 void JsonBuilderSink_FinalizeStatic(bt_self_component_sink* self)
@@ -175,8 +177,8 @@ BabelPtr<const bt_component_class_sink> GetJsonBuilderSinkComponentClass()
         bt_component_class_sink_create("jsonbuilder", JsonBuilderSink_RunStatic);
     bt_component_class_sink_set_initialize_method(
         jsonBuilderSinkClass.Get(), JsonBuilderSink_InitStatic);
-    bt_component_class_sink_set_input_port_connected_method(
-        jsonBuilderSinkClass.Get(), JsonBuilderSink_InputPortConnectedStatic);
+    bt_component_class_sink_set_graph_is_configured_method(
+        jsonBuilderSinkClass.Get(), JsonBuilderSink_GraphIsConfiguredStatic);
     bt_component_class_sink_set_finalize_method(
         jsonBuilderSinkClass.Get(), JsonBuilderSink_FinalizeStatic);
 
