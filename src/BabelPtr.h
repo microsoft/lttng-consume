@@ -62,12 +62,6 @@ class BabelPtr
         return *this;
     }
 
-    void IncrementingOwn(BTType* ptr)
-    {
-        DiscardCurrentAndAttach(ptr);
-        RefCounter::GetFunc(ptr);
-    }
-
     BTType* Detach()
     {
         BTType* ptr = _ptr;

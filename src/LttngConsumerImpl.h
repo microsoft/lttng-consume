@@ -47,9 +47,8 @@ class LttngConsumerImpl
     std::atomic<bool> _stopConsuming;
 
     BabelPtr<bt_graph> _graph;
-    BabelPtr<const bt_component_source> _lttngLiveSource;
-    BabelPtr<const bt_component_filter> _muxerFilter;
-    BabelPtr<const bt_component_sink> _jsonBuilderSink;
+    const bt_component_source* _lttngLiveSource = nullptr;
+    const bt_component_filter* _muxerFilter = nullptr;
 };
 
 }

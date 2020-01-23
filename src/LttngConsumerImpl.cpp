@@ -121,6 +121,7 @@ void LttngConsumerImpl::CreateGraph(
     JsonBuilderSinkInitParams jbInitParams;
     jbInitParams.OutputFunc = &callback;
 
+    const bt_component_sink* jsonBuilderSink = nullptr;
     CheckBtError(bt_graph_add_sink_component_with_initialize_method_data(
         _graph.Get(),
         jsonBuilderSinkClass.Get(),
@@ -128,7 +129,7 @@ void LttngConsumerImpl::CreateGraph(
         nullptr,
         &jbInitParams,
         BT_LOGGING_LEVEL_INFO,
-        &_jsonBuilderSink));
+        &jsonBuilderSink));
 
     CheckBtError(bt_graph_add_source_component_output_port_added_listener(
         _graph.Get(), SourceComponentOutputPortAddedListenerStatic, this, nullptr));
@@ -136,17 +137,14 @@ void LttngConsumerImpl::CreateGraph(
     // Wire up existing ports
     const bt_port_output* lttngLiveSourceOutputPort =
         bt_component_source_borrow_output_port_by_name_const(
-            _lttngLiveSource.Get(), "out");
+            _lttngLiveSource, "out");
     const bt_port_input* muxerFilterInputPort =
-        bt_component_filter_borrow_input_port_by_name_const(
-            _muxerFilter.Get(), "in0");
+        bt_component_filter_borrow_input_port_by_name_const(_muxerFilter, "in0");
 
     const bt_port_output* muxerFilterOutputPort =
-        bt_component_filter_borrow_output_port_by_name_const(
-            _muxerFilter.Get(), "out");
+        bt_component_filter_borrow_output_port_by_name_const(_muxerFilter, "out");
     const bt_port_input* jsonBuilderSinkInputPort =
-        bt_component_sink_borrow_input_port_by_name_const(
-            _jsonBuilderSink.Get(), "in");
+        bt_component_sink_borrow_input_port_by_name_const(jsonBuilderSink, "in");
 
     CheckBtError(bt_graph_connect_ports(
         _graph.Get(), lttngLiveSourceOutputPort, muxerFilterInputPort, nullptr));
@@ -169,17 +167,16 @@ LttngConsumerImpl::SourceComponentOutputPortAddedListener(
     const bt_component_source* component,
     const bt_port_output* port)
 {
-    FAIL_FAST_IF(component != _lttngLiveSource.Get());
+    FAIL_FAST_IF(component != _lttngLiveSource);
 
     int64_t muxerInputPortCount =
-        bt_component_filter_get_input_port_count(_muxerFilter.Get());
+        bt_component_filter_get_input_port_count(_muxerFilter);
     FAIL_FAST_IF(muxerInputPortCount < 0);
 
     for (int64_t i = 0; i < muxerInputPortCount; i++)
     {
         const bt_port_input* downstreamPort =
-            bt_component_filter_borrow_input_port_by_index_const(
-                _muxerFilter.Get(), i);
+            bt_component_filter_borrow_input_port_by_index_const(_muxerFilter, i);
 
         if (!bt_port_is_connected(bt_port_input_as_port_const(downstreamPort)))
         {
