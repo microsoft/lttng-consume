@@ -16,14 +16,14 @@ jobs:
         cd babeltrace-2.0.0
         sudo apt install libglib2.0-dev -y
         BABELTRACE_DEV_MODE=1 BABELTRACE_DEBUG_MODE=1 ./configure --disable-debug-info --disable-man-pages
-        make -j8
+        make
         sudo make install
       displayName: 'Install babeltrace'
 
     - task: CMake@1
       displayName: 'CMake Configure+Generate'
       inputs:
-        cmakeArgs: '..'
+        cmakeArgs: '-DCMAKE_BUILD_TYPE=Debug ..'
 
     - task: CMake@1
       displayName: 'CMake Build'
