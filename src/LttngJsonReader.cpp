@@ -244,6 +244,37 @@ void AddFieldStruct(
     }
 }
 
+void AddFieldArray(
+    JsonBuilder& builder,
+    JsonBuilder::iterator itr,
+    nonstd::string_view fieldName,
+    const bt_field* field)
+{
+    auto arrayItr = builder.push_back(itr, fieldName, JsonArray);
+
+    uint64_t numElements = bt_field_array_get_length(field);
+    for (uint64_t i = 0; i < numElements; i++)
+    {
+        const bt_field* elementField =
+            bt_field_array_borrow_element_field_by_index_const(field, i);
+
+        AddField(builder, arrayItr, {}, elementField);
+    }
+}
+
+void AddFieldOption(
+    JsonBuilder& builder,
+    JsonBuilder::iterator itr,
+    nonstd::string_view fieldName,
+    const bt_field* field)
+{
+    const bt_field* optionData = bt_field_option_borrow_field_const(field);
+    if (optionData)
+    {
+        AddField(builder, itr, fieldName, field);
+    }
+}
+
 void AddFieldVariant(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
@@ -292,24 +323,6 @@ bool EndsWith(nonstd::string_view str, nonstd::string_view querySuffix)
     return str.substr(str.size() - querySuffix.size()) == querySuffix;
 }
 
-void AddFieldArray(
-    JsonBuilder& builder,
-    JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
-    const bt_field* field)
-{
-    auto arrayItr = builder.push_back(itr, fieldName, JsonArray);
-
-    uint64_t numElements = bt_field_array_get_length(field);
-    for (uint64_t i = 0; i < numElements; i++)
-    {
-        const bt_field* elementField =
-            bt_field_array_borrow_element_field_by_index_const(field, i);
-
-        AddField(builder, arrayItr, {}, elementField);
-    }
-}
-
 void AddField(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
@@ -355,30 +368,22 @@ void AddField(
     case BT_FIELD_CLASS_TYPE_STRUCTURE:
         AddFieldStruct(builder, itr, fieldName, field);
         break;
-    case BT_FIELD_CLASS_TYPE_VARIANT:
-        AddFieldVariant(builder, itr, fieldName, field);
-        break;
     case BT_FIELD_CLASS_TYPE_STATIC_ARRAY:
     case BT_FIELD_CLASS_TYPE_DYNAMIC_ARRAY_WITHOUT_LENGTH_FIELD:
     case BT_FIELD_CLASS_TYPE_DYNAMIC_ARRAY_WITH_LENGTH_FIELD:
-        // TODO
         AddFieldArray(builder, itr, fieldName, field);
         break;
-        // TODO
-    // case BT_FIELD_CLASS_TYPE_OPTION_WITHOUT_SELECTOR_FIELD:
-    //     return "OPTION_WITHOUT_SELECTOR_FIELD";
-    // case BT_FIELD_CLASS_TYPE_OPTION_WITH_BOOL_SELECTOR_FIELD:
-    //     return "OPTION_WITH_BOOL_SELECTOR_FIELD";
-    // case BT_FIELD_CLASS_TYPE_OPTION_WITH_UNSIGNED_INTEGER_SELECTOR_FIELD:
-    //     return "OPTION_WITH_UNSIGNED_INTEGER_SELECTOR_FIELD";
-    // case BT_FIELD_CLASS_TYPE_OPTION_WITH_SIGNED_INTEGER_SELECTOR_FIELD:
-    //     return "OPTION_WITH_SIGNED_INTEGER_SELECTOR_FIELD";
-    // case BT_FIELD_CLASS_TYPE_VARIANT_WITHOUT_SELECTOR_FIELD:
-    //     return "VARIANT_WITHOUT_SELECTOR_FIELD";
-    // case BT_FIELD_CLASS_TYPE_VARIANT_WITH_UNSIGNED_INTEGER_SELECTOR_FIELD:
-    //     return "VARIANT_WITH_UNSIGNED_INTEGER_SELECTOR_FIELD";
-    // case BT_FIELD_CLASS_TYPE_VARIANT_WITH_SIGNED_INTEGER_SELECTOR_FIELD:
-    //     return "VARIANT_WITH_SIGNED_INTEGER_SELECTOR_FIELD";
+    case BT_FIELD_CLASS_TYPE_OPTION_WITHOUT_SELECTOR_FIELD:
+    case BT_FIELD_CLASS_TYPE_OPTION_WITH_BOOL_SELECTOR_FIELD:
+    case BT_FIELD_CLASS_TYPE_OPTION_WITH_UNSIGNED_INTEGER_SELECTOR_FIELD:
+    case BT_FIELD_CLASS_TYPE_OPTION_WITH_SIGNED_INTEGER_SELECTOR_FIELD:
+        AddFieldOption(builder, itr, fieldName, field);
+        break;
+    case BT_FIELD_CLASS_TYPE_VARIANT_WITHOUT_SELECTOR_FIELD:
+    case BT_FIELD_CLASS_TYPE_VARIANT_WITH_UNSIGNED_INTEGER_SELECTOR_FIELD:
+    case BT_FIELD_CLASS_TYPE_VARIANT_WITH_SIGNED_INTEGER_SELECTOR_FIELD:
+        AddFieldVariant(builder, itr, fieldName, field);
+        break;
     default:
         FAIL_FAST_IF(true);
     }
