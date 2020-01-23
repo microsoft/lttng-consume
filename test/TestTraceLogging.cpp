@@ -169,65 +169,68 @@ void RunConsumerTestKeywords(
         });
 }
 
-TEST_CASE("LttngConsumer parses keywords", "[consumer]")
-{
-    system("lttng destroy lttngconsume-tracelogging-keywords");
-    system("lttng create lttngconsume-tracelogging-keywords --live");
-    system(
-        "lttng enable-event -s lttngconsume-tracelogging-keywords --userspace MyTestProviderKeywords:*");
-    system(
-        "lttng add-context -s lttngconsume-tracelogging-keywords -u -t procname -t vpid");
-    system("lttng start lttngconsume-tracelogging-keywords");
+// TEST_CASE("LttngConsumer parses keywords", "[consumer]")
+// {
+//     system("lttng destroy lttngconsume-tracelogging-keywords");
+//     system("lttng create lttngconsume-tracelogging-keywords --live");
+//     system(
+//         "lttng enable-event -s lttngconsume-tracelogging-keywords --userspace
+//         MyTestProviderKeywords:*");
+//     system(
+//         "lttng add-context -s lttngconsume-tracelogging-keywords -u -t
+//         procname -t vpid");
+//     system("lttng start lttngconsume-tracelogging-keywords");
 
-    std::this_thread::sleep_for(std::chrono::seconds{ 1 });
+//     std::this_thread::sleep_for(std::chrono::seconds{ 1 });
 
-    std::string connectionString =
-        MakeConnectionString("lttngconsume-tracelogging-keywords");
+//     std::string connectionString =
+//         MakeConnectionString("lttngconsume-tracelogging-keywords");
 
-    LttngConsume::LttngConsumer consumer{ connectionString,
-                                          std::chrono::milliseconds{ 50 } };
+//     LttngConsume::LttngConsumer consumer{ connectionString,
+//                                           std::chrono::milliseconds{ 50 } };
 
-    constexpr uint64_t highestBit = 0x1ull << 63;
+//     constexpr uint64_t highestBit = 0x1ull << 63;
 
-    std::vector<KeywordTestValue> nameKeywordPairs = {
-        { "MyTestProviderKeywords:NoKeywords;k;",
-          "MyTestProviderKeywords.NoKeywords",
-          0 },
-        { "MyTestProviderKeywords:OneKeywordMinValue;k0;",
-          "MyTestProviderKeywords.OneKeywordMinValue",
-          1 },
-        { "MyTestProviderKeywords:OneKeywordMaxValue;k63;",
-          "MyTestProviderKeywords.OneKeywordMaxValue",
-          highestBit },
-        { "MyTestProviderKeywords:ManyKeywords;k0;k7;k58;k60;",
-          "MyTestProviderKeywords.ManyKeywords",
-          0x1400000000000081ull }
-    };
+//     std::vector<KeywordTestValue> nameKeywordPairs = {
+//         { "MyTestProviderKeywords:NoKeywords;k;",
+//           "MyTestProviderKeywords.NoKeywords",
+//           0 },
+//         { "MyTestProviderKeywords:OneKeywordMinValue;k0;",
+//           "MyTestProviderKeywords.OneKeywordMinValue",
+//           1 },
+//         { "MyTestProviderKeywords:OneKeywordMaxValue;k63;",
+//           "MyTestProviderKeywords.OneKeywordMaxValue",
+//           highestBit },
+//         { "MyTestProviderKeywords:ManyKeywords;k0;k7;k58;k60;",
+//           "MyTestProviderKeywords.ManyKeywords",
+//           0x1400000000000081ull }
+//     };
 
-    int eventCallbacks = 0;
-    std::thread consumptionThread{ RunConsumerTestKeywords,
-                                   std::ref(consumer),
-                                   std::cref(nameKeywordPairs),
-                                   std::ref(eventCallbacks) };
+//     int eventCallbacks = 0;
+//     std::thread consumptionThread{ RunConsumerTestKeywords,
+//                                    std::ref(consumer),
+//                                    std::cref(nameKeywordPairs),
+//                                    std::ref(eventCallbacks) };
 
-    TraceLoggingRegister(g_providerKeywords);
+//     TraceLoggingRegister(g_providerKeywords);
 
-    TraceLoggingWrite(g_providerKeywords, "NoKeywords");
-    TraceLoggingWrite(
-        g_providerKeywords, "OneKeywordMinValue", TraceLoggingKeyword(0x1));
-    TraceLoggingWrite(
-        g_providerKeywords, "OneKeywordMaxValue", TraceLoggingKeyword(highestBit));
-    TraceLoggingWrite(
-        g_providerKeywords,
-        "ManyKeywords",
-        TraceLoggingKeyword(0x1400000000000081ull));
+//     TraceLoggingWrite(g_providerKeywords, "NoKeywords");
+//     TraceLoggingWrite(
+//         g_providerKeywords, "OneKeywordMinValue", TraceLoggingKeyword(0x1));
+//     TraceLoggingWrite(
+//         g_providerKeywords, "OneKeywordMaxValue",
+//         TraceLoggingKeyword(highestBit));
+//     TraceLoggingWrite(
+//         g_providerKeywords,
+//         "ManyKeywords",
+//         TraceLoggingKeyword(0x1400000000000081ull));
 
-    TraceLoggingUnregister(g_providerKeywords);
+//     TraceLoggingUnregister(g_providerKeywords);
 
-    std::this_thread::sleep_for(std::chrono::seconds{ 2 });
+//     std::this_thread::sleep_for(std::chrono::seconds{ 2 });
 
-    consumer.StopConsuming();
-    consumptionThread.join();
+//     consumer.StopConsuming();
+//     consumptionThread.join();
 
-    REQUIRE(eventCallbacks == nameKeywordPairs.size());
-}
+//     REQUIRE(eventCallbacks == nameKeywordPairs.size());
+// }
