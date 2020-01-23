@@ -26,7 +26,7 @@
     mark_as_advanced(BABELTRACE2_LIBRARIES BABELTRACE2_INCLUDE_DIRS)
 #endif()
 
-add_library(babeltrace2 INTERFACE)
+add_library(babeltrace2 INTERFACE IMPORTED)
 target_include_directories(babeltrace2 INTERFACE ${BABELTRACE2_INCLUDE_DIRS})
 target_link_libraries(babeltrace2 INTERFACE ${BABELTRACE2_LIBRARIES} glib-2.0 gmodule-2.0)
 

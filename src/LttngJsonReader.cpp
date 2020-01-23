@@ -104,6 +104,26 @@ void AddEventName(
     builder.push_back(builder.root(), "name", eventName);
 }
 
+void AddFieldBool(
+    JsonBuilder& builder,
+    JsonBuilder::iterator itr,
+    nonstd::string_view fieldName,
+    const bt_field* field)
+{
+    bool val = bt_field_bool_get_value(field) == BT_TRUE;
+    builder.push_back(itr, fieldName, val);
+}
+
+void AddFieldBitArray(
+    JsonBuilder& builder,
+    JsonBuilder::iterator itr,
+    nonstd::string_view fieldName,
+    const bt_field* field)
+{
+    uint64_t val = bt_field_bit_array_get_value_as_integer(field);
+    builder.push_back(itr, fieldName, val);
+}
+
 void AddFieldSignedInteger(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
@@ -124,13 +144,22 @@ void AddFieldUnsignedInteger(
     builder.push_back(itr, fieldName, val);
 }
 
-void AddFieldReal(
+void AddFieldFloat(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
     nonstd::string_view fieldName,
     const bt_field* field)
 {
-    // TODO: single precision?
+    float val = bt_field_real_single_precision_get_value(field);
+    builder.push_back(itr, fieldName, val);
+}
+
+void AddFieldDouble(
+    JsonBuilder& builder,
+    JsonBuilder::iterator itr,
+    nonstd::string_view fieldName,
+    const bt_field* field)
+{
     double val = bt_field_real_double_precision_get_value(field);
     builder.push_back(itr, fieldName, val);
 }
@@ -296,20 +325,29 @@ void AddField(
     bt_field_class_type fieldType = bt_field_get_class_type(field);
     switch (fieldType)
     {
-    case BT_FIELD_CLASS_TYPE_SIGNED_INTEGER:
-        AddFieldSignedInteger(builder, itr, fieldName, field);
+    case BT_FIELD_CLASS_TYPE_BOOL:
+        AddFieldBool(builder, itr, fieldName, field);
+        break;
+    case BT_FIELD_CLASS_TYPE_BIT_ARRAY:
+        AddFieldBitArray(builder, itr, fieldName, field);
         break;
     case BT_FIELD_CLASS_TYPE_UNSIGNED_INTEGER:
         AddFieldUnsignedInteger(builder, itr, fieldName, field);
         break;
-    case BT_FIELD_CLASS_TYPE_REAL:
-        AddFieldReal(builder, itr, fieldName, field);
+    case BT_FIELD_CLASS_TYPE_SIGNED_INTEGER:
+        AddFieldSignedInteger(builder, itr, fieldName, field);
+        break;
+    case BT_FIELD_CLASS_TYPE_UNSIGNED_ENUMERATION:
+        AddFieldUnsignedEnum(builder, itr, fieldName, field);
         break;
     case BT_FIELD_CLASS_TYPE_SIGNED_ENUMERATION:
         AddFieldSignedEnum(builder, itr, fieldName, field);
         break;
-    case BT_FIELD_CLASS_TYPE_UNSIGNED_ENUMERATION:
-        AddFieldUnsignedEnum(builder, itr, fieldName, field);
+    case BT_FIELD_CLASS_TYPE_SINGLE_PRECISION_REAL:
+        AddFieldFloat(builder, itr, fieldName, field);
+        break;
+    case BT_FIELD_CLASS_TYPE_DOUBLE_PRECISION_REAL:
+        AddFieldDouble(builder, itr, fieldName, field);
         break;
     case BT_FIELD_CLASS_TYPE_STRING:
         AddFieldString(builder, itr, fieldName, field);
@@ -321,9 +359,26 @@ void AddField(
         AddFieldVariant(builder, itr, fieldName, field);
         break;
     case BT_FIELD_CLASS_TYPE_STATIC_ARRAY:
-    case BT_FIELD_CLASS_TYPE_DYNAMIC_ARRAY:
+    case BT_FIELD_CLASS_TYPE_DYNAMIC_ARRAY_WITHOUT_LENGTH_FIELD:
+    case BT_FIELD_CLASS_TYPE_DYNAMIC_ARRAY_WITH_LENGTH_FIELD:
+        // TODO
         AddFieldArray(builder, itr, fieldName, field);
         break;
+        // TODO
+    // case BT_FIELD_CLASS_TYPE_OPTION_WITHOUT_SELECTOR_FIELD:
+    //     return "OPTION_WITHOUT_SELECTOR_FIELD";
+    // case BT_FIELD_CLASS_TYPE_OPTION_WITH_BOOL_SELECTOR_FIELD:
+    //     return "OPTION_WITH_BOOL_SELECTOR_FIELD";
+    // case BT_FIELD_CLASS_TYPE_OPTION_WITH_UNSIGNED_INTEGER_SELECTOR_FIELD:
+    //     return "OPTION_WITH_UNSIGNED_INTEGER_SELECTOR_FIELD";
+    // case BT_FIELD_CLASS_TYPE_OPTION_WITH_SIGNED_INTEGER_SELECTOR_FIELD:
+    //     return "OPTION_WITH_SIGNED_INTEGER_SELECTOR_FIELD";
+    // case BT_FIELD_CLASS_TYPE_VARIANT_WITHOUT_SELECTOR_FIELD:
+    //     return "VARIANT_WITHOUT_SELECTOR_FIELD";
+    // case BT_FIELD_CLASS_TYPE_VARIANT_WITH_UNSIGNED_INTEGER_SELECTOR_FIELD:
+    //     return "VARIANT_WITH_UNSIGNED_INTEGER_SELECTOR_FIELD";
+    // case BT_FIELD_CLASS_TYPE_VARIANT_WITH_SIGNED_INTEGER_SELECTOR_FIELD:
+    //     return "VARIANT_WITH_SIGNED_INTEGER_SELECTOR_FIELD";
     default:
         FAIL_FAST_IF(true);
     }

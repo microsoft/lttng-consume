@@ -63,7 +63,7 @@ static void CheckBtError(int32_t status)
 void LttngConsumerImpl::CreateGraph(
     std::function<void(jsonbuilder::JsonBuilder&&)>& callback)
 {
-    bt_logging_set_global_level(BT_LOGGING_LEVEL_WARNING);
+    bt_logging_set_global_level(BT_LOGGING_LEVEL_INFO);
 
     _graph = bt_graph_create(0);
 

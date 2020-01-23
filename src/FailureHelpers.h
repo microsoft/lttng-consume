@@ -5,9 +5,10 @@
 
 #include <iostream>
 
-#define FAIL_FAST_IF(expr)               \
-    if ((expr))                          \
-    {                                    \
-        std::cerr << #expr << std::endl; \
-        std::terminate();                \
+#define FAIL_FAST_IF(expr)                                                   \
+    if ((expr))                                                              \
+    {                                                                        \
+        std::cerr << "lttng-consume fatal error: expr " << #expr << " file " \
+                  << __FILE__ << " line " << __LINE__ << std::endl;          \
+        std::terminate();                                                    \
     }
