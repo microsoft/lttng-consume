@@ -60,8 +60,6 @@ bt_component_class_sink_consume_method_status JsonBuilderSink::Run()
         bt_self_component_port_input_message_iterator_next(
             _messageItr.Get(), &messageArray.Messages, &messageArray.Count);
 
-    std::cout << "JsonBuilderSink|Run: NextIteratorStatus[" << status << "]\n";
-
     switch (status)
     {
     case BT_MESSAGE_ITERATOR_NEXT_STATUS_END:
@@ -77,15 +75,12 @@ bt_component_class_sink_consume_method_status JsonBuilderSink::Run()
 
     for (uint64_t i = 0; i < messageArray.Count; i++)
     {
-        std::cout << "JsonBuilderSink|HandleMessage: Count[" << i << "]\n";
         const bt_message* message = messageArray.Messages[i];
         if (bt_message_get_type(message) == BT_MESSAGE_TYPE_EVENT)
         {
             HandleMessage(message);
         }
     }
-
-    std::cout << "JsonBuilderSink|HandleMessage: Complete\n";
 
     return BT_COMPONENT_CLASS_SINK_CONSUME_METHOD_STATUS_OK;
 }
@@ -106,8 +101,6 @@ JsonBuilderSink::GraphIsConfigured(bt_self_component_sink* self)
             status);
     }
     FAIL_FAST_IF(!_messageItr);
-
-    std::cout << "JsonBuilderSink|GraphIsConfigured Complete\n";
 
     return BT_COMPONENT_CLASS_SINK_GRAPH_IS_CONFIGURED_METHOD_STATUS_OK;
 }
