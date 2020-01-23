@@ -52,7 +52,7 @@ void RunConsumer(LttngConsume::LttngConsumer& consumer, int& renderCount)
         itr = jsonBuilder.find("streamEventContext", "procname");
         REQUIRE(itr != jsonBuilder.end());
         REQUIRE(itr->Type() == JsonUtf8);
-        REQUIRE(itr->GetUnchecked<nonstd::string_view>() == "lttng-consumeTe");
+        REQUIRE(!itr->GetUnchecked<nonstd::string_view>().empty());
 
         itr = jsonBuilder.find("streamEventContext", "vpid");
         REQUIRE(itr != jsonBuilder.end());
