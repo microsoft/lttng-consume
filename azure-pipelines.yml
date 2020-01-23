@@ -35,8 +35,7 @@ jobs:
       displayName: 'Install lttng-tools for tests'
 
     - bash: |
-        numHwThreads = ${lscpu -p | grep -c "^[0-9]"}
-        echo "Num processors: $numHwThreads"
+        lscpu -p | grep -c "^[0-9]"
         cd build/test
         mkdir testResults
         valgrind ./lttng-consumeTest -o testResults/TEST-LttngConsumeTest.xml -r junit
