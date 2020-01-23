@@ -63,7 +63,7 @@ static void CheckBtError(int32_t status)
 void LttngConsumerImpl::CreateGraph(
     std::function<void(jsonbuilder::JsonBuilder&&)>& callback)
 {
-    bt_logging_set_global_level(BT_LOGGING_LEVEL_INFO);
+    bt_logging_set_global_level(BT_LOGGING_LEVEL_WARNING);
 
     _graph = bt_graph_create(0);
 
@@ -92,7 +92,7 @@ void LttngConsumerImpl::CreateGraph(
         lttngLiveClass,
         "liveInput",
         paramsMap.Get(),
-        BT_LOGGING_LEVEL_INFO,
+        BT_LOGGING_LEVEL_WARNING,
         &_lttngLiveSource));
 
     // Create filter component
@@ -111,7 +111,7 @@ void LttngConsumerImpl::CreateGraph(
         muxerClass,
         "muxer",
         nullptr,
-        BT_LOGGING_LEVEL_INFO,
+        BT_LOGGING_LEVEL_WARNING,
         &_muxerFilter));
 
     // Create sink component
