@@ -31,13 +31,15 @@ jobs:
         cmakeArgs: '--build .'
 
     - bash: |
-        sudo apt-get install lttng-tools -y
+        sudo apt-get install lttng-tools valgrind -y
       displayName: 'Install lttng-tools for tests'
 
     - bash: |
+        numHwThreads = ${lscpu -p | grep -c "^[0-9]"}
+        echo "Num processors: $numHwThreads"
         cd build/test
         mkdir testResults
-        ./lttng-consumeTest -o testResults/TEST-LttngConsumeTest.xml -r junit
+        valgrind ./lttng-consumeTest -o testResults/TEST-LttngConsumeTest.xml -r junit
       displayName: 'Run test binary'
       continueOnError: true
 

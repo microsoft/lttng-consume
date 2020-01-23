@@ -79,50 +79,48 @@ void RunConsumerTraceLogging(LttngConsume::LttngConsumer& consumer, int& renderC
     });
 }
 
-// TEST_CASE("LttngConsumer TraceLogging does not crash", "[consumer]")
-// {
-//     system("lttng destroy lttngconsume-tracelogging");
-//     system("lttng create lttngconsume-tracelogging --live");
-//     system(
-//         "lttng enable-event -s lttngconsume-tracelogging --userspace
-//         MyTestProvider:*");
-//     system(
-//         "lttng add-context -s lttngconsume-tracelogging -u -t procname -t
-//         vpid");
-//     system("lttng start lttngconsume-tracelogging");
+TEST_CASE("LttngConsumer TraceLogging does not crash", "[consumer]")
+{
+    system("lttng destroy lttngconsume-tracelogging");
+    system("lttng create lttngconsume-tracelogging --live");
+    system(
+        "lttng enable-event -s lttngconsume-tracelogging --userspace MyTestProvider:*");
+    system(
+        "lttng add-context -s lttngconsume-tracelogging -u -t procname -t vpid");
+    system("lttng start lttngconsume-tracelogging");
 
-//     std::this_thread::sleep_for(std::chrono::seconds{ 1 });
+    std::this_thread::sleep_for(std::chrono::seconds{ 1 });
 
-//     std::string connectionString =
-//         MakeConnectionString("lttngconsume-tracelogging");
+    std::string connectionString =
+        MakeConnectionString("lttngconsume-tracelogging");
 
-//     LttngConsume::LttngConsumer consumer{ connectionString,
-//                                           std::chrono::milliseconds{ 50 } };
+    LttngConsume::LttngConsumer consumer{ connectionString,
+                                          std::chrono::milliseconds{ 50 } };
 
-//     constexpr int c_eventsToFire = 1;
+    constexpr int c_eventsToFire = 1;
 
-//     int eventCallbacks = 0;
-//     std::thread consumptionThread{ RunConsumerTraceLogging,
-//                                    std::ref(consumer),
-//                                    std::ref(eventCallbacks) };
+    int eventCallbacks = 0;
+    std::thread consumptionThread{ RunConsumerTraceLogging,
+                                   std::ref(consumer),
+                                   std::ref(eventCallbacks) };
 
-//     TraceLoggingRegister(g_provider);
+    TraceLoggingRegister(g_provider);
 
-//     std::string val = "Banana";
-//     TraceLoggingWrite(
-//         g_provider,
-//         "MyTestEvent",
-//         TraceLoggingCountedString(val.data(), val.size(), "CountedString"));
+    std::string val = "Banana";
+    TraceLoggingWrite(
+        g_provider,
+        "MyTestEvent",
+        TraceLoggingCountedString(val.data(), val.size(), "CountedString"));
 
-//     TraceLoggingUnregister(g_provider);
+    TraceLoggingUnregister(g_provider);
 
-//     std::this_thread::sleep_for(std::chrono::seconds{ 2 });
+    std::this_thread::sleep_for(std::chrono::seconds{ 2 });
 
-//     consumer.StopConsuming();
-//     consumptionThread.join();
+    consumer.StopConsuming();
+    consumptionThread.join();
 
-//     REQUIRE(eventCallbacks == c_eventsToFire);
-// }
+    REQUIRE(eventCallbacks == c_eventsToFire);
+}
 
 struct KeywordTestValue
 {
