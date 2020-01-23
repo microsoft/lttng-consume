@@ -125,5 +125,5 @@ MAKE_PTR_TYPE(bt_graph)
 MAKE_PTR_TYPE(bt_component_source)
 MAKE_PTR_TYPE(bt_component_filter)
 MAKE_PTR_TYPE(bt_component_sink)
-MAKE_PTR_TYPE(bt_self_component_port_input_message_iterator)
+MAKE_PTR_TYPE(bt_message_iterator)
 }

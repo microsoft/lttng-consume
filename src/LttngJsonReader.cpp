@@ -287,7 +287,7 @@ void AddFieldVariant(
         bt_field_variant_borrow_selected_option_field_const(field);
 
     uint64_t variantSubfieldIndex =
-        bt_field_variant_get_selected_option_field_index(field);
+        bt_field_variant_get_selected_option_index(field);
 
     const bt_field_class_variant_option* variantSubfieldClass =
         bt_field_class_variant_borrow_option_by_index_const(

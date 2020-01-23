@@ -34,7 +34,7 @@ class JsonBuilderSink
     void HandleMessage(const bt_message* message);
 
   private:
-    BabelPtr<bt_self_component_port_input_message_iterator> _messageItr;
+    BabelPtr<bt_message_iterator> _messageItr;
     std::function<void(JsonBuilder&&)>& _outputFunc;
 };
 
@@ -56,9 +56,8 @@ bt_component_class_sink_consume_method_status JsonBuilderSink::Run()
 
     MessageArray messageArray;
 
-    bt_message_iterator_next_status status =
-        bt_self_component_port_input_message_iterator_next(
-            _messageItr.Get(), &messageArray.Messages, &messageArray.Count);
+    bt_message_iterator_next_status status = bt_message_iterator_next(
+        _messageItr.Get(), &messageArray.Messages, &messageArray.Count);
 
     switch (status)
     {
@@ -91,11 +90,10 @@ JsonBuilderSink::GraphIsConfigured(bt_self_component_sink* self)
     bt_self_component_port_input* inputPort =
         bt_self_component_sink_borrow_input_port_by_name(self, c_inputPortName);
 
-    bt_self_component_port_input_message_iterator_create_from_sink_component_status status =
-        bt_self_component_port_input_message_iterator_create_from_sink_component(
+    bt_message_iterator_create_from_sink_component_status status =
+        bt_message_iterator_create_from_sink_component(
             self, inputPort, &_messageItr);
-    if (status !=
-        BT_SELF_COMPONENT_PORT_INPUT_MESSAGE_ITERATOR_CREATE_FROM_SINK_COMPONENT_STATUS_OK)
+    if (status != BT_MESSAGE_ITERATOR_CREATE_FROM_SINK_COMPONENT_STATUS_OK)
     {
         return static_cast<bt_component_class_sink_graph_is_configured_method_status>(
             status);

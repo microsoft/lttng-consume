@@ -131,11 +131,7 @@ void LttngConsumerImpl::CreateGraph(
         &_jsonBuilderSink));
 
     CheckBtError(bt_graph_add_source_component_output_port_added_listener(
-        _graph.Get(),
-        SourceComponentOutputPortAddedListenerStatic,
-        nullptr,
-        this,
-        nullptr));
+        _graph.Get(), SourceComponentOutputPortAddedListenerStatic, this, nullptr));
 
     // Wire up existing ports
     const bt_port_output* lttngLiveSourceOutputPort =
