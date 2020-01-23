@@ -16,7 +16,7 @@ jobs:
         cd babeltrace-2.0.0
         sudo apt install libglib2.0-dev -y
         BABELTRACE_DEV_MODE=1 BABELTRACE_DEBUG_MODE=1 ./configure --disable-debug-info --disable-man-pages
-        make
+        make -j2
         sudo make install
       displayName: 'Install babeltrace'
 
@@ -28,16 +28,16 @@ jobs:
     - task: CMake@1
       displayName: 'CMake Build'
       inputs:
-        cmakeArgs: '--build .'
+        cmakeArgs: '--build . -- -j2'
 
     - bash: |
         sudo apt-get install lttng-tools valgrind -y
       displayName: 'Install lttng-tools for tests'
 
     - bash: |
-        lscpu -p | grep -c "^[0-9]"
         cd build/test
         mkdir testResults
+        # Currently babeltrace-2.0.0 has a known memory access problem when handling TraceLogging events
         valgrind ./lttng-consumeTest -o testResults/TEST-LttngConsumeTest.xml -r junit
       displayName: 'Run test binary'
       continueOnError: true
