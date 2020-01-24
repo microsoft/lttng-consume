@@ -51,7 +51,7 @@ This project carries on the following libraries:
 
 1) [JsonBuilder](https://github.com/Microsoft/JsonBuilder)
 2) uuid
-3) babeltrace2 (latest master of lttng-consume building against v2.0.0-pre5 tag)
+3) babeltrace2 (Tested against 2.0.0 release)
 
 Number 1 can be gotten at the URL above and Number 2 is available via apt:
 

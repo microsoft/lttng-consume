@@ -1,46 +1,44 @@
 jobs:
   - job: Linux
     pool:
-      vmImage: 'Ubuntu 16.04'
+      vmImage: 'Ubuntu 18.04'
     steps:
     - bash: |
-        sudo apt-get update
-        sudo apt-get install g++-4.8 liblttng-ust-dev -y
+        sudo apt update
+        sudo apt install g++ liblttng-ust-dev uuid-dev -y
       displayName: 'Install dependency packages'
 
     - bash: |
         mkdir deps
         cd deps
-        mkdir -p src
-        mkdir -p install
-        cd src
-        git clone -b v2.0.0-pre5 https://github.com/efficios/babeltrace
-        cd babeltrace
-        sudo apt-get install gcc libc6-dev libglib2.0-dev uuid-dev libpopt-dev automake autoconf libtool flex bison -y
-        ./bootstrap
-        ./configure --disable-debug-info --disable-man-pages
-        make
+        wget https://www.efficios.com/files/babeltrace/babeltrace-2.0.0.tar.bz2
+        tar -xvf babeltrace-2.0.0.tar.bz2
+        cd babeltrace-2.0.0
+        sudo apt install libglib2.0-dev -y
+        BABELTRACE_DEV_MODE=1 BABELTRACE_DEBUG_MODE=1 ./configure --disable-debug-info --disable-man-pages
+        make -j2
         sudo make install
       displayName: 'Install babeltrace'
-
-    - bash: |
-        sudo apt-get install lttng-tools -y
-      displayName: 'Install lttng-tools and start session for runtime test to succeed'
 
     - task: CMake@1
       displayName: 'CMake Configure+Generate'
       inputs:
-        cmakeArgs: '-DCMAKE_C_COMPILER=gcc-4.8 -DCMAKE_CXX_COMPILER=g++-4.8 ..'
+        cmakeArgs: '-DCMAKE_BUILD_TYPE=Debug ..'
 
     - task: CMake@1
       displayName: 'CMake Build'
       inputs:
-        cmakeArgs: '--build .'
+        cmakeArgs: '--build . -- -j2'
+
+    - bash: |
+        sudo apt-get install lttng-tools valgrind -y
+      displayName: 'Install lttng-tools for tests'
 
     - bash: |
         cd build/test
         mkdir testResults
-        ./lttng-consumeTest -o testResults/TEST-LttngConsumeTest.xml -r junit
+        # Currently babeltrace-2.0.0 has a known memory access problem when handling TraceLogging events
+        valgrind ./lttng-consumeTest -o testResults/TEST-LttngConsumeTest.xml -r junit
       displayName: 'Run test binary'
       continueOnError: true
 

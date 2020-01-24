@@ -5,7 +5,7 @@
 
 #include <type_traits>
 
-#include <babeltrace/babeltrace.h>
+#include <babeltrace2/babeltrace.h>
 
 namespace LttngConsume {
 
@@ -60,12 +60,6 @@ class BabelPtr
     {
         DiscardCurrentAndAttach(ptr);
         return *this;
-    }
-
-    void IncrementingOwn(BTType* ptr)
-    {
-        DiscardCurrentAndAttach(ptr);
-        RefCounter::GetFunc(ptr);
     }
 
     BTType* Detach()
@@ -125,5 +119,5 @@ MAKE_PTR_TYPE(bt_graph)
 MAKE_PTR_TYPE(bt_component_source)
 MAKE_PTR_TYPE(bt_component_filter)
 MAKE_PTR_TYPE(bt_component_sink)
-MAKE_PTR_TYPE(bt_self_component_port_input_message_iterator)
+MAKE_PTR_TYPE(bt_message_iterator)
 }
