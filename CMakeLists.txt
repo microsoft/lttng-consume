@@ -11,9 +11,15 @@ if (NOT TARGET nonstd::string_view-lite)
     add_subdirectory(external/string-view-lite)
 endif ()
 
-if (NOT TARGET jsonbuilder)
-    add_subdirectory(external/JsonBuilder)
-endif()
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
+#find_package(uuid REQUIRED)
+find_package(babeltrace2 REQUIRED)
+
+# populates jsonbuilder::jsonbuilder
+find_package(jsonbuilder REQUIRED)
+# if (NOT TARGET jsonbuilder)
+#     add_subdirectory(external/JsonBuilder)
+# endif()
 
 add_compile_options(-Wall -Wextra -Werror)
 
