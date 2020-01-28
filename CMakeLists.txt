@@ -7,7 +7,6 @@ project(lttng-consume VERSION 0.1)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 
-message("Value of uuid_FOUND ${uuid_FOUND} | uuid::uuid ${uuid_exists}")
 find_package(babeltrace2 REQUIRED)
 
 # populates jsonbuilder::jsonbuilder
