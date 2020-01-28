@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.7)
 add_executable(lttng-consumeTest TestTracepoint.cpp TestTraceLogging.cpp Test-Tracepoint.h Test-Tracepoint.cpp CatchMain.cpp)
 target_compile_features(lttng-consumeTest PRIVATE cxx_std_11)
 target_include_directories(lttng-consumeTest PRIVATE .)
-target_link_libraries(lttng-consumeTest PRIVATE tracelogging lttng-consume Catch2::Catch2 pthread dl lttng-ust lttng-ust-tracepoint)
+target_link_libraries(lttng-consumeTest PRIVATE lttng-consume tracelogging::tracelogging Catch2::Catch2 pthread dl)
 
 include(CTest)
 include(Catch)

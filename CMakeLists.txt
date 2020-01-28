@@ -17,6 +17,7 @@ find_package(babeltrace2 REQUIRED)
 
 # populates jsonbuilder::jsonbuilder
 find_package(jsonbuilder REQUIRED)
+find_package(tracelogging REQUIRED)
 # if (NOT TARGET jsonbuilder)
 #     add_subdirectory(external/JsonBuilder)
 # endif()
@@ -33,10 +34,6 @@ if (${LTTNGCONSUME_ENABLE_TESTING} AND ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_
         list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/external/Catch2/contrib")
         add_subdirectory(external/Catch2)
     endif ()
-
-    if (NOT TARGET tracelogging)
-        add_subdirectory(external/TraceLogging)
-    endif()
 
     add_subdirectory(test)
 endif ()
