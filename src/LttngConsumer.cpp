@@ -8,7 +8,7 @@
 namespace LttngConsume {
 
 LttngConsumer::LttngConsumer(
-    nonstd::string_view listeningUrl,
+    std::string_view listeningUrl,
     std::chrono::milliseconds pollInterval)
 {
     _impl.reset(new LttngConsumerImpl(listeningUrl, pollInterval));

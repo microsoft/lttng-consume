@@ -16,7 +16,7 @@
 namespace LttngConsume {
 
 LttngConsumerImpl::LttngConsumerImpl(
-    nonstd::string_view listeningUrl,
+    std::string_view listeningUrl,
     std::chrono::milliseconds pollInterval)
     : _listeningUrl(listeningUrl)
     , _pollInterval(pollInterval)

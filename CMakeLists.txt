@@ -5,21 +5,14 @@ cmake_minimum_required(VERSION 3.7)
 
 project(lttng-consume VERSION 0.1)
 
-set(LTTNGCONSUME_ENABLE_TESTING TRUE CACHE BOOL "build test dir" )
+find_package(jsonbuilder REQUIRED)
 
-if (NOT TARGET nonstd::string_view-lite)
-    add_subdirectory(external/string-view-lite)
-endif ()
-
-if (NOT TARGET jsonbuilder)
-    add_subdirectory(external/JsonBuilder)
-endif()
-
-add_compile_options(-Wall -Wextra -Werror)
+add_compile_options(-Wall -Wextra)
 
 add_subdirectory(src)
 
-# Only include testing stuff if we are the top level
+# Only include testing stuff if we are the top level, unless specifically opted out
+option(LTTNGCONSUME_ENABLE_TESTING "build test dir" ON)
 if (${LTTNGCONSUME_ENABLE_TESTING} AND ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
     enable_testing()
 
