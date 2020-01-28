@@ -5,15 +5,16 @@ cmake_minimum_required(VERSION 3.7)
 
 project(lttng-consume VERSION 0.1)
 
-find_package(jsonbuilder REQUIRED)
-
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
-#find_package(uuid REQUIRED)
+
+message("Value of uuid_FOUND ${uuid_FOUND} | uuid::uuid ${uuid_exists}")
 find_package(babeltrace2 REQUIRED)
 
 # populates jsonbuilder::jsonbuilder
 find_package(jsonbuilder REQUIRED)
+# TODO: put back local version
 find_package(tracelogging REQUIRED)
+# TODO: Test and use local version
 # if (NOT TARGET jsonbuilder)
 #     add_subdirectory(external/JsonBuilder)
 # endif()

@@ -31,7 +31,7 @@ static std::string MakeConnectionString(std::string_view sessionName)
 
     result += hostnameBuf;
     result += "/";
-    result += nonstd::to_string(sessionName);
+    result += sessionName;
 
     return result;
 }
@@ -49,8 +49,7 @@ void RunConsumerTraceLogging(LttngConsume::LttngConsumer& consumer, int& renderC
         REQUIRE(itr != jsonBuilder.end());
         REQUIRE(itr->Type() == JsonUtf8);
         REQUIRE(
-            itr->GetUnchecked<std::string_view>() ==
-            "MyTestProvider.MyTestEvent");
+            itr->GetUnchecked<std::string_view>() == "MyTestProvider.MyTestEvent");
 
         itr = jsonBuilder.find("time");
         REQUIRE(itr != jsonBuilder.end());

@@ -74,8 +74,7 @@ void RunConsumer(LttngConsume::LttngConsumer& consumer, int& renderCount)
         REQUIRE(itr != jsonBuilder.end());
         REQUIRE(itr->Type() == JsonUtf8);
         REQUIRE(
-            itr->GetUnchecked<std::string_view>() ==
-            std::to_string(renderCount));
+            itr->GetUnchecked<std::string_view>() == std::to_string(renderCount));
 
         itr = jsonBuilder.find("data", "my_integer_field");
         REQUIRE(itr != jsonBuilder.end());
@@ -159,7 +158,7 @@ static std::string MakeConnectionString(std::string_view sessionName)
 
     result += hostnameBuf;
     result += "/";
-    result += nonstd::to_string(sessionName);
+    result += sessionName;
 
     return result;
 }

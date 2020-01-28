@@ -296,7 +296,7 @@ void AddFieldVariant(
     const char* optionName =
         bt_field_class_variant_option_get_name(variantSubfieldClass);
 
-    std::string variantFieldName = nonstd::to_string(fieldName);
+    std::string variantFieldName{ fieldName };
     variantFieldName += "_";
     variantFieldName += optionName;
 
