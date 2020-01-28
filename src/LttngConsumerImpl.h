@@ -6,8 +6,7 @@
 #include <atomic>
 #include <chrono>
 #include <functional>
-
-#include <nonstd/string_view.hpp>
+#include <string_view>
 
 #include "BabelPtr.h"
 
@@ -21,7 +20,7 @@ class LttngConsumerImpl
 {
   public:
     LttngConsumerImpl(
-        nonstd::string_view listeningUrl,
+        std::string_view listeningUrl,
         std::chrono::milliseconds pollInterval);
 
     void StartConsuming(std::function<void(jsonbuilder::JsonBuilder&&)> callback);

@@ -4,9 +4,9 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <string_view>
 
 #include <jsonbuilder/JsonBuilder.h>
-#include <nonstd/string_view.hpp>
 
 namespace LttngConsume {
 
@@ -16,7 +16,7 @@ class LttngConsumer
 {
   public:
     LttngConsumer(
-        nonstd::string_view listeningUrl,
+        std::string_view listeningUrl,
         std::chrono::milliseconds pollInterval);
 
     ~LttngConsumer();

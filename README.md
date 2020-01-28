@@ -15,7 +15,7 @@ void RunConsumerTraceLogging(LttngConsume::LttngConsumer& consumer)
         JsonRenderer renderer;
         renderer.Pretty(true);
 
-        nonstd::string_view jsonString = renderer.Render(jsonBuilder);
+        std::string_view jsonString = renderer.Render(jsonBuilder);
         std::cout << jsonString << std::endl;
     });
 }

@@ -14,7 +14,7 @@ add_library(lttng-consume ${LC_SourceFiles} ${LC_PrivateHeaders} ${LC_PublicHead
 target_compile_options(lttng-consume PRIVATE -Wextra -Wall -pedantic)
 target_include_directories(lttng-consume PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(lttng-consume PUBLIC jsonbuilder::jsonbuilder PRIVATE babeltrace2)
-target_compile_features(lttng-consume PUBLIC cxx_std_11)
+target_compile_features(lttng-consume PUBLIC cxx_std_17)
 
 # TODO: Add tests and install targets if needed.
 

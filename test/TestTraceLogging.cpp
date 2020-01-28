@@ -22,7 +22,7 @@ TRACELOGGING_DEFINE_PROVIDER(
 
 using namespace jsonbuilder;
 
-static std::string MakeConnectionString(nonstd::string_view sessionName)
+static std::string MakeConnectionString(std::string_view sessionName)
 {
     std::string result = "net://localhost/host/";
 
@@ -42,14 +42,14 @@ void RunConsumerTraceLogging(LttngConsume::LttngConsumer& consumer, int& renderC
         JsonRenderer renderer;
         renderer.Pretty(true);
 
-        nonstd::string_view jsonString = renderer.Render(jsonBuilder);
+        std::string_view jsonString = renderer.Render(jsonBuilder);
         REQUIRE(!jsonString.empty());
 
         auto itr = jsonBuilder.find("name");
         REQUIRE(itr != jsonBuilder.end());
         REQUIRE(itr->Type() == JsonUtf8);
         REQUIRE(
-            itr->GetUnchecked<nonstd::string_view>() ==
+            itr->GetUnchecked<std::string_view>() ==
             "MyTestProvider.MyTestEvent");
 
         itr = jsonBuilder.find("time");
@@ -73,7 +73,7 @@ void RunConsumerTraceLogging(LttngConsume::LttngConsumer& consumer, int& renderC
         itr = jsonBuilder.find("data", "CountedString");
         REQUIRE(itr != jsonBuilder.end());
         REQUIRE(itr->Type() == JsonUtf8);
-        REQUIRE(itr->GetUnchecked<nonstd::string_view>() == "Banana");
+        REQUIRE(itr->GetUnchecked<std::string_view>() == "Banana");
 
         renderCount++;
     });
@@ -139,14 +139,14 @@ void RunConsumerTestKeywords(
             JsonRenderer renderer;
             renderer.Pretty(true);
 
-            nonstd::string_view jsonString = renderer.Render(jsonBuilder);
+            std::string_view jsonString = renderer.Render(jsonBuilder);
             REQUIRE(!jsonString.empty());
 
             auto itr = jsonBuilder.find("name");
             REQUIRE(itr != jsonBuilder.end());
             REQUIRE(itr->Type() == JsonUtf8);
             REQUIRE(
-                itr->GetUnchecked<nonstd::string_view>() ==
+                itr->GetUnchecked<std::string_view>() ==
                 keywordTestValues[renderCount].ParsedName);
 
             auto metadataItr = jsonBuilder.find("metadata");
@@ -156,7 +156,7 @@ void RunConsumerTestKeywords(
             REQUIRE(itr != jsonBuilder.end());
             REQUIRE(itr->Type() == JsonUtf8);
             REQUIRE(
-                itr->GetUnchecked<nonstd::string_view>() ==
+                itr->GetUnchecked<std::string_view>() ==
                 keywordTestValues[renderCount].OriginalName);
 
             uint64_t keywordVal = 0;
