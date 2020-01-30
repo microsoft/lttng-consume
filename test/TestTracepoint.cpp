@@ -20,14 +20,14 @@ void RunConsumer(LttngConsume::LttngConsumer& consumer, int& renderCount)
         JsonRenderer renderer;
         renderer.Pretty(true);
 
-        nonstd::string_view jsonString = renderer.Render(jsonBuilder);
+        std::string_view jsonString = renderer.Render(jsonBuilder);
         REQUIRE(!jsonString.empty());
 
         auto itr = jsonBuilder.find("name");
         REQUIRE(itr != jsonBuilder.end());
         REQUIRE(itr->Type() == JsonUtf8);
         REQUIRE(
-            itr->GetUnchecked<nonstd::string_view>() ==
+            itr->GetUnchecked<std::string_view>() ==
             "hello_world.my_first_tracepoint");
 
         itr = jsonBuilder.find("time");
@@ -52,7 +52,7 @@ void RunConsumer(LttngConsume::LttngConsumer& consumer, int& renderCount)
         itr = jsonBuilder.find("streamEventContext", "procname");
         REQUIRE(itr != jsonBuilder.end());
         REQUIRE(itr->Type() == JsonUtf8);
-        REQUIRE(!itr->GetUnchecked<nonstd::string_view>().empty());
+        REQUIRE(!itr->GetUnchecked<std::string_view>().empty());
 
         itr = jsonBuilder.find("streamEventContext", "vpid");
         REQUIRE(itr != jsonBuilder.end());
@@ -74,8 +74,7 @@ void RunConsumer(LttngConsume::LttngConsumer& consumer, int& renderCount)
         REQUIRE(itr != jsonBuilder.end());
         REQUIRE(itr->Type() == JsonUtf8);
         REQUIRE(
-            itr->GetUnchecked<nonstd::string_view>() ==
-            std::to_string(renderCount));
+            itr->GetUnchecked<std::string_view>() == std::to_string(renderCount));
 
         itr = jsonBuilder.find("data", "my_integer_field");
         REQUIRE(itr != jsonBuilder.end());
@@ -93,7 +92,7 @@ void RunConsumer(LttngConsume::LttngConsumer& consumer, int& renderCount)
         REQUIRE(itr->GetUnchecked<float>() == renderCount);
 
 #ifdef TRACEPOINT_ENUM
-        const nonstd::string_view c_enumVals[] = {
+        const std::string_view c_enumVals[] = {
             "ZERO", "ONE", "TWO", "THREEFOUR", "THREEFOUR"
         };
 
@@ -101,7 +100,7 @@ void RunConsumer(LttngConsume::LttngConsumer& consumer, int& renderCount)
         REQUIRE(itr != jsonBuilder.end());
         REQUIRE(itr->Type() == JsonUtf8);
         REQUIRE(
-            itr->GetUnchecked<nonstd::string_view>() ==
+            itr->GetUnchecked<std::string_view>() ==
             (renderCount < 5 ? std::string{ c_enumVals[renderCount] } :
                                std::to_string(renderCount)));
 #endif
@@ -137,20 +136,20 @@ void RunConsumer(LttngConsume::LttngConsumer& consumer, int& renderCount)
         itr = jsonBuilder.find("data", "my_char_array_text_field");
         REQUIRE(itr != jsonBuilder.end());
         REQUIRE(itr->Type() == JsonUtf8);
-        REQUIRE(itr->GetUnchecked<nonstd::string_view>() == "abcde");
+        REQUIRE(itr->GetUnchecked<std::string_view>() == "abcde");
 
         itr = jsonBuilder.find("data", "my_char_seq_text_field");
         REQUIRE(itr != jsonBuilder.end());
         REQUIRE(itr->Type() == JsonUtf8);
         REQUIRE(
-            itr->GetUnchecked<nonstd::string_view>() ==
-            nonstd::string_view{ "abcde" }.substr(0, renderCount % 5));
+            itr->GetUnchecked<std::string_view>() ==
+            std::string_view{ "abcde" }.substr(0, renderCount % 5));
 
         renderCount++;
     });
 }
 
-static std::string MakeConnectionString(nonstd::string_view sessionName)
+static std::string MakeConnectionString(std::string_view sessionName)
 {
     std::string result = "net://localhost/host/";
 
@@ -159,7 +158,7 @@ static std::string MakeConnectionString(nonstd::string_view sessionName)
 
     result += hostnameBuf;
     result += "/";
-    result += nonstd::to_string(sessionName);
+    result += sessionName;
 
     return result;
 }

@@ -1,33 +1,40 @@
-#
-# Input variables:
-#   BABELTRACE2_PREFIX
-#
-# Output variables
-#   BABELTRACE2_FOUND
-#   BABELTRACE2_LIBRARIES
-#   BABELTRACE2_INCLUDE_DIRS
-#
+# Output target
+#   babeltrace2::babeltrace2
 
-#if (BABELTRACE2_INCLUDE_DIRS AND BABELTRACE2_LIBRARIES)
-#    set(BABELTRACE2_FIND_QUIETLY TRUE)
-#else ()
-    find_path(BABELTRACE2_INCLUDE_DIRS NAMES babeltrace2/babeltrace.h)
+include(AliasPkgConfigTarget)
 
-    # You really don't want a static version of this because it loads a bunch of plugins.
-    find_library(BABELTRACE2_LIBRARIES NAMES libbabeltrace2.so)
+if (TARGET babeltrace2::babeltrace2)
+    return()
+endif()
+
+# First try and find with PkgConfig
+find_package(PkgConfig QUIET)
+if (PKG_CONFIG_FOUND)
+    pkg_check_modules(babeltrace2 QUIET IMPORTED_TARGET babeltrace2)
+    if (TARGET PkgConfig::babeltrace2)
+        alias_pkg_config_target(babeltrace2::babeltrace2 PkgConfig::babeltrace2)
+        return()
+    endif ()
+endif ()
+
+# If that doesn't work, try again with old fashioned path lookup, with some caching
+if (NOT babeltrace2_LIBRARY)
+    find_path(babeltrace2_INCLUDE_DIR
+        NAMES babeltrace2/babeltrace.h)
+
+    find_library(babeltrace2_LIBRARY
+        NAMES babeltrace2)
 
     include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(babeltrace2 DEFAULT_MSG BABELTRACE2_LIBRARIES BABELTRACE2_INCLUDE_DIRS)
+    find_package_handle_standard_args(babeltrace2 DEFAULT_MSG
+        babeltrace2_INCLUDE_DIR babeltrace2_LIBRARY)
 
- #   if (NOT BABELTRACE_FOUND)
- #       message(FATAL_ERROR "babeltrace not found")
- #   endif ()
+    mark_as_advanced(babeltrace2_INCLUDE_DIR babeltrace2_LIBRARY)
+endif()
 
-    mark_as_advanced(BABELTRACE2_LIBRARIES BABELTRACE2_INCLUDE_DIRS)
-#endif()
+add_library(babeltrace2::babeltrace2 UNKNOWN IMPORTED)
+set_target_properties(babeltrace2::babeltrace2 PROPERTIES
+    IMPORTED_LOCATION "${babeltrace2_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${babeltrace2_INCLUDE_DIR}")
 
-add_library(babeltrace2 INTERFACE IMPORTED)
-target_include_directories(babeltrace2 INTERFACE ${BABELTRACE2_INCLUDE_DIRS})
-target_link_libraries(babeltrace2 INTERFACE ${BABELTRACE2_LIBRARIES} glib-2.0)
-
-#might need to eventually include glib2, libpopt, uuid?
+set(babeltrace2_FOUND TRUE)

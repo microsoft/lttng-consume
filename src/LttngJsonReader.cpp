@@ -19,7 +19,7 @@ namespace LttngConsume {
 void AddField(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field);
 
 void AddTimestamp(JsonBuilder& builder, const bt_clock_snapshot* clock)
@@ -48,9 +48,9 @@ void AddEventName(
     std::replace(eventName.begin(), eventName.end(), ':', '.');
 
     // Parse keywords out of event name
-    nonstd::string_view eventNameView{ eventName };
+    std::string_view eventNameView{ eventName };
     auto leadingSemicolonPos = eventNameView.find(';');
-    if (leadingSemicolonPos != nonstd::string_view::npos)
+    if (leadingSemicolonPos != std::string_view::npos)
     {
         eventName.resize(leadingSemicolonPos);
 
@@ -60,7 +60,7 @@ void AddEventName(
         {
             auto nextSemicolonPos =
                 eventNameView.find(';', leadingSemicolonPos + 1);
-            FAIL_FAST_IF(nextSemicolonPos == nonstd::string_view::npos);
+            FAIL_FAST_IF(nextSemicolonPos == std::string_view::npos);
 
             FAIL_FAST_IF(eventNameView[leadingSemicolonPos + 1] != 'k');
 
@@ -107,7 +107,7 @@ void AddEventName(
 void AddFieldBool(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     bool val = bt_field_bool_get_value(field) == BT_TRUE;
@@ -117,7 +117,7 @@ void AddFieldBool(
 void AddFieldBitArray(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     uint64_t val = bt_field_bit_array_get_value_as_integer(field);
@@ -127,7 +127,7 @@ void AddFieldBitArray(
 void AddFieldSignedInteger(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     int64_t val = bt_field_integer_signed_get_value(field);
@@ -137,7 +137,7 @@ void AddFieldSignedInteger(
 void AddFieldUnsignedInteger(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     uint64_t val = bt_field_integer_unsigned_get_value(field);
@@ -147,7 +147,7 @@ void AddFieldUnsignedInteger(
 void AddFieldFloat(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     float val = bt_field_real_single_precision_get_value(field);
@@ -157,7 +157,7 @@ void AddFieldFloat(
 void AddFieldDouble(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     double val = bt_field_real_double_precision_get_value(field);
@@ -167,7 +167,7 @@ void AddFieldDouble(
 void AddFieldSignedEnum(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     const char* const* labels = nullptr;
@@ -188,7 +188,7 @@ void AddFieldSignedEnum(
 void AddFieldUnsignedEnum(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     const char* const* labels = nullptr;
@@ -209,19 +209,19 @@ void AddFieldUnsignedEnum(
 void AddFieldString(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     const char* val = bt_field_string_get_value(field);
     uint64_t len = bt_field_string_get_length(field);
     builder.push_back(
-        itr, fieldName, nonstd::string_view{ val, static_cast<size_t>(len) });
+        itr, fieldName, std::string_view{ val, static_cast<size_t>(len) });
 }
 
 void AddFieldStruct(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     auto structItr = builder.push_back(itr, fieldName, JsonObject);
@@ -247,7 +247,7 @@ void AddFieldStruct(
 void AddFieldArray(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     auto arrayItr = builder.push_back(itr, fieldName, JsonArray);
@@ -265,7 +265,7 @@ void AddFieldArray(
 void AddFieldOption(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     const bt_field* optionData = bt_field_option_borrow_field_const(field);
@@ -278,7 +278,7 @@ void AddFieldOption(
 void AddFieldVariant(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     const bt_field_class* fieldClass = bt_field_borrow_class_const(field);
@@ -296,14 +296,14 @@ void AddFieldVariant(
     const char* optionName =
         bt_field_class_variant_option_get_name(variantSubfieldClass);
 
-    std::string variantFieldName = nonstd::to_string(fieldName);
+    std::string variantFieldName{ fieldName };
     variantFieldName += "_";
     variantFieldName += optionName;
 
     AddField(builder, itr, variantFieldName, selectedOptionField);
 }
 
-bool StartsWith(nonstd::string_view str, nonstd::string_view queryPrefix)
+bool StartsWith(std::string_view str, std::string_view queryPrefix)
 {
     if (str.size() < queryPrefix.size())
     {
@@ -313,7 +313,7 @@ bool StartsWith(nonstd::string_view str, nonstd::string_view queryPrefix)
     return str.substr(0, queryPrefix.size()) == queryPrefix;
 }
 
-bool EndsWith(nonstd::string_view str, nonstd::string_view querySuffix)
+bool EndsWith(std::string_view str, std::string_view querySuffix)
 {
     if (str.size() < querySuffix.size())
     {
@@ -326,7 +326,7 @@ bool EndsWith(nonstd::string_view str, nonstd::string_view querySuffix)
 void AddField(
     JsonBuilder& builder,
     JsonBuilder::iterator itr,
-    nonstd::string_view fieldName,
+    std::string_view fieldName,
     const bt_field* field)
 {
     // Skip added '_foo_sequence_field_length' type fields
