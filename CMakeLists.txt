@@ -1,6 +1,3 @@
-# CMakeList.txt : Top-level CMake project file, do global configuration
-# and include sub-projects here.
-#
 cmake_minimum_required(VERSION 3.7)
 
 project(lttng-consume VERSION 0.1)
@@ -9,14 +6,12 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 
 find_package(babeltrace2 REQUIRED)
 
-# populates jsonbuilder::jsonbuilder
-find_package(jsonbuilder REQUIRED)
-# TODO: put back local version
-find_package(tracelogging REQUIRED)
-# TODO: Test and use local version
-# if (NOT TARGET jsonbuilder)
-#     add_subdirectory(external/JsonBuilder)
-# endif()
+# Allow submodule of jsonbuilder
+if (EXISTS ${PROJECT_SOURCE_DIR}/external/jsonbuilder/CMakeLists.txt)
+    add_subdirectory(external/jsonbuilder)
+else ()
+    find_package(jsonbuilder REQUIRED)
+endif ()
 
 add_compile_options(-Wall -Wextra)
 
@@ -27,9 +22,17 @@ option(LTTNGCONSUME_ENABLE_TESTING "build test dir" ON)
 if (${LTTNGCONSUME_ENABLE_TESTING} AND ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
     enable_testing()
 
-    if (NOT TARGET Catch2::Catch2)
+    if (EXISTS ${PROJECT_SOURCE_DIR}/external/Catch2/CMakeLists.txt)
         list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/external/Catch2/contrib")
         add_subdirectory(external/Catch2)
+    else ()
+        find_package(Catch2 REQUIRED)
+    endif ()
+
+    if (EXISTS ${PROJECT_SOURCE_DIR}/external/tracelogging/CMakeLists.txt)
+        add_subdirectory(external/tracelogging)
+    else ()
+        find_package(tracelogging REQUIRED)
     endif ()
 
     add_subdirectory(test)
