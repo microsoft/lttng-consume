@@ -29,8 +29,8 @@ if (${LTTNGCONSUME_ENABLE_TESTING} AND ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_
         find_package(Catch2 REQUIRED)
     endif ()
 
-    if (EXISTS ${PROJECT_SOURCE_DIR}/external/tracelogging/CMakeLists.txt)
-        add_subdirectory(external/tracelogging)
+    if (EXISTS ${PROJECT_SOURCE_DIR}/external/TraceLogging/CMakeLists.txt)
+        add_subdirectory(external/TraceLogging)
     else ()
         find_package(tracelogging REQUIRED)
     endif ()
