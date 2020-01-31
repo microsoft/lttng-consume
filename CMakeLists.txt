@@ -7,7 +7,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 find_package(babeltrace2 REQUIRED)
 
 # Allow submodule of jsonbuilder
-if (EXISTS ${PROJECT_SOURCE_DIR}/external/JsonBuilder/CMakeLists.txt)
+if (EXISTS ${PROJECT_SOURCE_DIR}/external/JsonBuilder/CMakeLists.txt AND NOT TARGET jsonbuilder::jsonbuilder)
     add_subdirectory(external/JsonBuilder)
 else ()
     find_package(jsonbuilder REQUIRED)
