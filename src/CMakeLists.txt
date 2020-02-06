@@ -20,6 +20,7 @@ target_link_libraries(lttng-consume
 target_compile_features(lttng-consume PUBLIC cxx_std_17)
 
 set_property(TARGET lttng-consume PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET lttng-consume PROPERTY SOVERSION 0)
 
 add_library(lttng-consume::lttng-consume ALIAS lttng-consume)
 
