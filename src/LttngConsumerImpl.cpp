@@ -35,11 +35,11 @@ void LttngConsumerImpl::StartConsuming(
         std::this_thread::sleep_for(_pollInterval);
     }
 
-    if (status != BT_GRAPH_RUN_STATUS_AGAIN)
-    {
-        std::cerr << "Final graph status: " << status << std::endl;
-    }
-    FAIL_FAST_IF(status != BT_GRAPH_RUN_STATUS_AGAIN);
+    // if (status != BT_GRAPH_RUN_STATUS_AGAIN)
+    // {
+    //     std::cerr << "Final graph status: " << status << std::endl;
+    // }
+    // FAIL_FAST_IF(status != BT_GRAPH_RUN_STATUS_AGAIN);
 }
 
 void LttngConsumerImpl::StopConsuming()
@@ -75,17 +75,18 @@ void LttngConsumerImpl::CreateGraph(
 
     const bt_component_class_source* lttngLiveClass =
         bt_plugin_borrow_source_component_class_by_name_const(
-            ctfPlugin.Get(), "lttng-live");
+            ctfPlugin.Get(), "fs");
 
     BabelPtr<bt_value> urlArray = bt_value_array_create();
     CheckBtError(bt_value_array_append_string_element(
-        urlArray.Get(), std::string{ _listeningUrl }.c_str()));
+        urlArray.Get(),
+        "/home/nick/lttng-traces/ubu1804/lttngconsume-tracelogging-20200206-161858/ust/uid/1000/64-bit"));
 
     BabelPtr<bt_value> paramsMap = bt_value_map_create();
     CheckBtError(
         bt_value_map_insert_entry(paramsMap.Get(), "inputs", urlArray.Get()));
-    CheckBtError(bt_value_map_insert_string_entry(
-        paramsMap.Get(), "session-not-found-action", "continue"));
+    // CheckBtError(bt_value_map_insert_string_entry(
+    //     paramsMap.Get(), "session-not-found-action", "continue"));
 
     CheckBtError(bt_graph_add_source_component(
         _graph.Get(),
@@ -135,19 +136,31 @@ void LttngConsumerImpl::CreateGraph(
         _graph.Get(), SourceComponentOutputPortAddedListenerStatic, this, nullptr));
 
     // Wire up existing ports
-    const bt_port_output* lttngLiveSourceOutputPort =
-        bt_component_source_borrow_output_port_by_name_const(
-            _lttngLiveSource, "out");
-    const bt_port_input* muxerFilterInputPort =
-        bt_component_filter_borrow_input_port_by_name_const(_muxerFilter, "in0");
+    for (uint64_t i = 0;
+         i < bt_component_source_get_output_port_count(_lttngLiveSource);
+         i++)
+    {
+        const bt_port_output* lttngLiveSourceOutputPort =
+            bt_component_source_borrow_output_port_by_index_const(
+                _lttngLiveSource, i);
+        const bt_port_input* muxerFilterInputPort =
+            bt_component_filter_borrow_input_port_by_index_const(_muxerFilter, i);
+
+        if (!bt_port_is_connected(
+                bt_port_input_as_port_const(muxerFilterInputPort)))
+        {
+            CheckBtError(bt_graph_connect_ports(
+                _graph.Get(),
+                lttngLiveSourceOutputPort,
+                muxerFilterInputPort,
+                nullptr));
+        }
+    }
 
     const bt_port_output* muxerFilterOutputPort =
         bt_component_filter_borrow_output_port_by_name_const(_muxerFilter, "out");
     const bt_port_input* jsonBuilderSinkInputPort =
         bt_component_sink_borrow_input_port_by_name_const(jsonBuilderSink, "in");
-
-    CheckBtError(bt_graph_connect_ports(
-        _graph.Get(), lttngLiveSourceOutputPort, muxerFilterInputPort, nullptr));
     CheckBtError(bt_graph_connect_ports(
         _graph.Get(), muxerFilterOutputPort, jsonBuilderSinkInputPort, nullptr));
 }
@@ -173,6 +186,7 @@ LttngConsumerImpl::SourceComponentOutputPortAddedListener(
         bt_component_filter_get_input_port_count(_muxerFilter);
     FAIL_FAST_IF(muxerInputPortCount < 0);
 
+    std::cout << "Wiring up port\r\n";
     for (int64_t i = 0; i < muxerInputPortCount; i++)
     {
         const bt_port_input* downstreamPort =
