@@ -35,7 +35,7 @@ install(TARGETS lttng-consume
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-set(LTTNGCONSUME_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/jsonbuilder)
+set(LTTNGCONSUME_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/lttng-consume)
 
 install(EXPORT lttng-consume-export
     FILE lttng-consumeTargets.cmake
