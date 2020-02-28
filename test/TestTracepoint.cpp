@@ -190,18 +190,23 @@ TEST_CASE("LttngConsumer callbacks happen", "[consumer]")
     constexpr int c_intArray[] = { 0, 1, 2 };
     constexpr char c_charArray[] = { 'a', 'b', 'c', 'd', 'e' };
 
-    for (int i = 0; i < c_eventsToFire; i++)
-    {
-        tracepoint(
-            hello_world,
-            my_first_tracepoint,
-            i,
-            std::to_string(i).c_str(),
-            c_intArray,
-            c_charArray);
+    int i = 0;
+    tracepoint(
+        hello_world,
+        my_first_tracepoint,
+        i,
+        std::to_string(i).c_str(),
+        c_intArray,
+        c_charArray);
+    tracepoint(
+        hello_world,
+        my_first_tracepoint2,
+        i,
+        std::to_string(i).c_str(),
+        c_intArray,
+        c_charArray);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds{ 2 });
-    }
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 2 });
 
     std::this_thread::sleep_for(std::chrono::seconds{ 2 });
 

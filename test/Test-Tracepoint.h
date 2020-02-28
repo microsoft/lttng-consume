@@ -44,6 +44,23 @@ TRACEPOINT_EVENT(
         ctf_sequence(int, my_int_seq_field, my_int_array_arg, unsigned int, (my_integer_arg % 3))
         ctf_array_text(char, my_char_array_text_field, my_char_array_arg, 5)
         ctf_sequence_text(char, my_char_seq_text_field, my_char_array_arg, unsigned int, (my_integer_arg % 5))))
+
+TRACEPOINT_EVENT(
+    hello_world,
+    my_first_tracepoint2,
+    TP_ARGS(int, my_integer_arg, const char*, my_string_arg, const int*, my_int_array_arg, const char*, my_char_array_arg),
+    TP_FIELDS(
+        ctf_string(my_string_field, my_string_arg)
+        ctf_integer(int, my_integer_field, my_integer_arg)
+        ctf_integer(unsigned int, my_unsigned_integer_field, my_integer_arg)
+        ctf_float(double, my_float_field, my_integer_arg)
+#ifdef TRACEPOINT_ENUM
+        ctf_enum(hello_world, my_enum, int, my_enum_field, my_integer_arg)
+#endif
+        ctf_array(int, my_int_array_field, my_int_array_arg, 3)
+        ctf_sequence(int, my_int_seq_field, my_int_array_arg, unsigned int, (my_integer_arg % 3))
+        ctf_array_text(char, my_char_array_text_field, my_char_array_arg, 5)
+        ctf_sequence_text(char, my_char_seq_text_field, my_char_array_arg, unsigned int, (my_integer_arg % 5))))
 // clang-format on
 
 #endif /* _HELLO_TP_H */
