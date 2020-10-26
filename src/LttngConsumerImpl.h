@@ -6,6 +6,7 @@
 #include <atomic>
 #include <chrono>
 #include <functional>
+#include <string>
 #include <string_view>
 
 #include "BabelPtr.h"
